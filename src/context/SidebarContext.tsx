@@ -9,7 +9,7 @@ import { createContext, useContext, useState, useEffect } from "react";
 import type { SidebarState } from "../types";
 
 /**
- * Type pour le contexte de la sidebar
+ * Typage pour le contexte de la sidebar
  */
 type SidebarContextType = SidebarState & {
   activeItem: string | null;
