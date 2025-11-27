@@ -193,6 +193,11 @@ export const authService = {
         const finalMessage = errorMessage.trim() || `Erreur ${status}: ${error.response.statusText}` || "Erreur lors de la connexion";
         throw new Error(finalMessage);
       } else if (error.request) {
+        // Vérifier si l'URL de l'API est configurée
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+        if (!apiBaseUrl) {
+          throw new Error("Configuration API manquante. Veuillez contacter l'administrateur.");
+        }
         throw new Error("Impossible de contacter le serveur. Vérifiez votre connexion internet.");
       } else {
         throw new Error(error.message || "Une erreur est survenue lors de la connexion");

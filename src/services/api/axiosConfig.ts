@@ -16,21 +16,28 @@ import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResp
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Vérifier que la variable est définie
-// if (!API_BASE_URL) {
-//   throw new Error(
-//     "VITE_API_BASE_URL n'est pas définie dans les variables d'environnement.\n" +
-//     "Veuillez créer un fichier .env à la racine du projet avec:\n" +
-//     "VITE_API_BASE_URL=http://admin-api.proxymarketapp.com/api\n\n" +
-//     "IMPORTANT: Pas de guillemets, pas de point-virgule dans le fichier .env\n" +
-//     "IMPORTANT: Redémarrez le serveur de développement après la création/modification du fichier .env"
-//   );
-// }
+if (!API_BASE_URL) {
+  const errorMessage = import.meta.env.PROD
+    ? "Configuration API manquante. Veuillez contacter l'administrateur."
+    : "VITE_API_BASE_URL n'est pas définie dans les variables d'environnement.\n" +
+      "Veuillez créer un fichier .env à la racine du projet avec:\n" +
+      "VITE_API_BASE_URL=http://admin-api.proxymarketapp.com/api\n\n" +
+      "IMPORTANT: Pas de guillemets, pas de point-virgule dans le fichier .env\n" +
+      "IMPORTANT: Redémarrez le serveur de développement après la création/modification du fichier .env";
+  
+  console.error("❌ Erreur de configuration API:", errorMessage);
+  
+  // En production, on ne bloque pas l'application mais on affiche un message d'erreur
+  if (import.meta.env.PROD) {
+    console.error("🔧 Pour corriger: Configurez VITE_API_BASE_URL dans Vercel Dashboard > Settings > Environment Variables");
+  }
+}
 
 /**
  * Instance axios configurée pour l'application
  */
 const apiClient: AxiosInstance = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_BASE_URL || "", // Utiliser une chaîne vide si non définie pour éviter les erreurs
   timeout: 30000, // 30 secondes
   headers: {
     "Content-Type": "application/json",
@@ -104,15 +111,22 @@ apiClient.interceptors.response.use(
       }
     } else if (error.request) {
       // La requête a été faite mais aucune réponse n'a été reçue
+      // Vérifier si c'est dû à une URL manquante
+      if (!API_BASE_URL) {
+        if (import.meta.env.PROD) {
+          console.error("❌ VITE_API_BASE_URL n'est pas configurée sur Vercel");
+          console.error("🔧 Solution: Vercel Dashboard > Settings > Environment Variables > Ajouter VITE_API_BASE_URL");
+        }
+      }
       // Ne pas logger error.request pour éviter d'exposer des informations sensibles
       if (import.meta.env.DEV) {
-        console.error("Erreur réseau: Aucune réponse du serveur");
+        console.error("Erreur réseau: Aucune réponse du serveur", !API_BASE_URL ? "(URL API non configurée)" : "");
       }
     } else {
       // Une erreur s'est produite lors de la configuration de la requête
       // Ne pas logger error.message pour éviter d'exposer des informations sensibles
       if (import.meta.env.DEV) {
-        console.error("Erreur de configuration de la requête");
+        console.error("Erreur de configuration de la requête", !API_BASE_URL ? "(URL API non configurée)" : "");
       }
     }
     
