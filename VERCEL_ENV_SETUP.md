@@ -18,7 +18,7 @@ Si vous voyez cette erreur lors de la connexion, c'est que la variable d'environ
 1. Cliquez sur **Add New**
 2. Remplissez les champs :
    - **Key** : `VITE_API_BASE_URL`
-   - **Value** : `http://admin-api.proxymarketapp.com/api`
+   - **Value** : `https://admin-api.proxymarketapp.com/api` ⚠️ **IMPORTANT : Utilisez HTTPS, pas HTTP**
    - **Environment** : Sélectionnez **Production**, **Preview**, et **Development** (ou au minimum **Production**)
 
 3. Cliquez sur **Save**
@@ -37,7 +37,7 @@ Après avoir ajouté la variable :
 
 | Variable | Valeur | Description |
 |----------|--------|-------------|
-| `VITE_API_BASE_URL` | `http://admin-api.proxymarketapp.com/api` | URL de base de l'API backend |
+| `VITE_API_BASE_URL` | `https://admin-api.proxymarketapp.com/api` ⚠️ **Doit être en HTTPS** | URL de base de l'API backend |
 
 ## 📋 Variables d'Environnement Optionnelles
 
@@ -73,6 +73,13 @@ Pour vérifier que la variable est bien configurée :
 ### L'API backend n'est pas accessible
 
 - Vérifiez que l'API backend est bien en ligne
-- Vérifiez que l'URL est correcte (http vs https)
+- ⚠️ **IMPORTANT** : Utilisez **HTTPS** (pas HTTP) car Vercel sert l'application en HTTPS
 - Vérifiez les paramètres CORS de l'API backend pour autoriser les requêtes depuis votre domaine Vercel
+
+### Erreur "Mixed Content"
+
+Si vous voyez l'erreur "Mixed Content" dans la console :
+- **Cause** : L'application est en HTTPS mais l'API est en HTTP
+- **Solution** : Changez `VITE_API_BASE_URL` pour utiliser `https://` au lieu de `http://`
+- Exemple : `https://admin-api.proxymarketapp.com/api`
 

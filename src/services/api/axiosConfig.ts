@@ -21,7 +21,8 @@ if (!API_BASE_URL) {
     ? "Configuration API manquante. Veuillez contacter l'administrateur."
     : "VITE_API_BASE_URL n'est pas définie dans les variables d'environnement.\n" +
       "Veuillez créer un fichier .env à la racine du projet avec:\n" +
-      "VITE_API_BASE_URL=http://admin-api.proxymarketapp.com/api\n\n" +
+      "VITE_API_BASE_URL=https://admin-api.proxymarketapp.com/api\n\n" +
+      "IMPORTANT: Utilisez HTTPS (pas HTTP) pour la production\n" +
       "IMPORTANT: Pas de guillemets, pas de point-virgule dans le fichier .env\n" +
       "IMPORTANT: Redémarrez le serveur de développement après la création/modification du fichier .env";
   
