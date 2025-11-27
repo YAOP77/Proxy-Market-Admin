@@ -135,7 +135,7 @@ const fetchBoutiquesPage = async (page: number): Promise<{
       };
       
       return {
-        data: responseData.data as Boutique[],
+        data: responseData.data as unknown as Boutique[],
         meta,
         links,
       };
@@ -145,7 +145,7 @@ const fetchBoutiquesPage = async (page: number): Promise<{
     if (Array.isArray(responseData)) {
       // Convertir en format paginé avec une seule page
       return {
-        data: responseData as Boutique[],
+        data: responseData as unknown as Boutique[],
         meta: {
           current_page: 1,
           from: 1,
