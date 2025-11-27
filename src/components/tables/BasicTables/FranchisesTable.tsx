@@ -19,7 +19,6 @@ import {
 } from "../../ui/table";
 
 import Badge from "../../ui/badge/Badge";
-import Button from "../../ui/button/Button";
 import { Boutique } from "../../../services/api/franchiseService";
 
 interface FranchisesTableProps {
@@ -87,15 +86,14 @@ export default function FranchisesTable({ boutiques, onAddFranchise }: Franchise
         </TableCell>
         {onAddFranchise && (
           <TableCell className="px-4 py-3 text-center">
-            <Button
-              variant="none"
-              size="sm"
-              onClick={(e) => onAddFranchise(boutique, e)}
-              className="bg-[#04b05d] hover:bg-[#039a52] text-white shadow-theme-xs disabled:bg-[#04b05d]/70 focus:ring-3 focus:ring-[#04b05d]/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            <button
+              type="button"
+              onClick={() => onAddFranchise?.(boutique, {} as React.MouseEvent)}
+              className="inline-flex items-center justify-center gap-2 rounded-lg transition px-3 py-2 text-sm bg-[#04b05d] hover:bg-[#039a52] text-white shadow-theme-xs disabled:bg-[#04b05d]/70 focus:ring-3 focus:ring-[#04b05d]/20 disabled:opacity-50 disabled:cursor-not-allowed"
               title="Placer un franchisé"
             >
               Placer un franchisé
-            </Button>
+            </button>
           </TableCell>
         )}
       </TableRow>

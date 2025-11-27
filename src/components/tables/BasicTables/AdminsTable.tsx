@@ -42,8 +42,8 @@ export default function AdminsTable() {
     try {
       setIsLoading(true);
       setError("");
-      const adminsList = await adminService.getAdmins();
-      setAdmins(adminsList);
+      const adminsResponse = await adminService.getAdmins();
+      setAdmins(adminsResponse.data || []);
     } catch (error: unknown) {
       // Afficher un message d'erreur plus spécifique
       const errorMessage = error instanceof Error ? error.message : "Erreur lors du chargement des administrateurs";

@@ -23,9 +23,10 @@ export default function WelcomeCard() {
       }
 
       try {
-        const admins = await adminService.getAdmins();
+        const adminsResponse = await adminService.getAdmins();
+        const admins = adminsResponse.data || [];
         const matchedAdmin = admins.find(
-          (admin) => admin.email?.toLowerCase() === user.email.toLowerCase()
+          (admin: Admin) => admin.email?.toLowerCase() === user.email.toLowerCase()
         );
         setAdminDetails(matchedAdmin ?? null);
       } catch (error) {

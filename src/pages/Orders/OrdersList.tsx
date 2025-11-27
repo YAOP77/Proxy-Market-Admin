@@ -123,7 +123,7 @@ const ordersData: Order[] = [
 ];
 
 export default function OrdersList() {
-  const [orders, setOrders] = useState(ordersData);
+  const [orders] = useState(ordersData);
 
   /**
    * Détermine la couleur du badge selon le statut

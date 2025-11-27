@@ -22,7 +22,7 @@ export const useAnimatedCounter = (
   targetValue: number,
   options: UseAnimatedCounterOptions = {}
 ): string => {
-  const { duration = 2000, format = "number", prefix = "", suffix = "" } = options;
+  const { duration = 2000, format: _format = "number", prefix = "", suffix = "" } = options;
   const [displayValue, setDisplayValue] = useState<number>(0);
   const animationFrameRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);

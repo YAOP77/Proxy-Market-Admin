@@ -16,7 +16,7 @@ import { Outlet } from "react-router";
 import AppHeader from "./AppHeader";
 import Backdrop from "./Backdrop";
 import AppSidebar from "./AppSidebar";
-import { SIDEBAR_CONFIG } from "../config/constants";
+// import { SIDEBAR_CONFIG } from "../config/constants"; // Non utilisé pour le moment
 
 /**
  * Contenu du layout avec la logique de positionnement dynamique

@@ -15,8 +15,8 @@ import EcommerceMetrics from "../../components/ecommerce/EcommerceMetrics";
 import MonthlySalesChart from "../../components/ecommerce/MonthlySalesChart";
 import StatisticsChart from "../../components/ecommerce/StatisticsChart";
 import MonthlyTarget from "../../components/ecommerce/MonthlyTarget";
-import RecentOrders from "../../components/ecommerce/RecentOrders";
-import DemographicCard from "../../components/ecommerce/DemographicCard";
+// import RecentOrders from "../../components/ecommerce/RecentOrders"; // Non utilisé pour le moment
+// import DemographicCard from "../../components/ecommerce/DemographicCard"; // Non utilisé pour le moment
 import WelcomeCard from "../../components/dashboard/WelcomeCard";
 import PageMeta from "../../components/common/PageMeta";
 import { PAGE_META } from "../../config/constants";

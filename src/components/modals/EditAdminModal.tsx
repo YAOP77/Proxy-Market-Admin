@@ -14,7 +14,7 @@ import Alert from "../ui/alert/Alert";
 import { EyeCloseIcon, EyeIcon } from "../../icons";
 import adminService, { Admin, UpdateAdminData, Commune } from "../../services/api/adminService";
 import { cleanPhoneNumber, validatePhoneNumber } from "../../utils/phoneUtils";
-import { validateEmail, validatePositiveInteger } from "../../utils/validationUtils";
+import { validateEmail } from "../../utils/validationUtils";
 
 interface PasswordFieldProps {
   value: string;
@@ -66,13 +66,10 @@ export default function EditAdminModal({
   const [password, setPassword] = useState("");
   const [contact1, setContact1] = useState("");
   const [contact2, setContact2] = useState("");
-  const [role, setRole] = useState<"admin" | "caissier" | "commercial" | "">("");
+  const [role, setRole] = useState<"admin" | "super_admin" | "caissier" | "commercial" | "">("");
   const [communeId, setCommuneId] = useState<string>("");
   const [adresse, setAdresse] = useState("");
   const [status, setStatus] = useState("");
-
-  // État pour l'affichage du mot de passe
-  const [showPassword, setShowPassword] = useState(false);
 
   // État pour les alertes
   const [showWarningAlert, setShowWarningAlert] = useState(false);
@@ -97,7 +94,7 @@ export default function EditAdminModal({
       setPassword("");
       setContact1(admin.contact_1 || "");
       setContact2(admin.contact_2 || "");
-      setRole(admin.role || "");
+      setRole((admin.role as "admin" | "super_admin" | "caissier" | "commercial" | "") || "");
       // S'assurer que commune_id est bien converti en string
       const adminCommuneId = admin.commune_id;
       if (adminCommuneId !== null && adminCommuneId !== undefined) {
@@ -113,7 +110,7 @@ export default function EditAdminModal({
           setStatus(admin.status === 1 ? "actif" : "inactif");
         } else if (typeof admin.status === 'string') {
           // Si c'est une string, vérifier si c'est "1" ou "actif"
-          const statusStr = admin.status.toLowerCase().trim();
+          const statusStr = String(admin.status).toLowerCase().trim();
           if (statusStr === "1" || statusStr === "actif") {
             setStatus("actif");
           } else {
@@ -336,7 +333,7 @@ export default function EditAdminModal({
       setPassword("");
       setContact1(admin.contact_1 || "");
       setContact2(admin.contact_2 || "");
-      setRole(admin.role || "");
+      setRole((admin.role as "admin" | "super_admin" | "caissier" | "commercial" | "") || "");
       // S'assurer que commune_id est bien converti en string
       const adminCommuneId = admin.commune_id;
       if (adminCommuneId !== null && adminCommuneId !== undefined) {
@@ -352,7 +349,7 @@ export default function EditAdminModal({
           setStatus(admin.status === 1 ? "actif" : "inactif");
         } else if (typeof admin.status === 'string') {
           // Si c'est une string, vérifier si c'est "1" ou "actif"
-          const statusStr = admin.status.toLowerCase().trim();
+          const statusStr = String(admin.status).toLowerCase().trim();
           if (statusStr === "1" || statusStr === "actif") {
             setStatus("actif");
           } else {
@@ -492,7 +489,7 @@ export default function EditAdminModal({
               <Select
                 id="edit-role"
                 value={role}
-                onChange={(value) => setRole(value as "admin" | "caissier" | "commercial" | "")}
+                onChange={(value) => setRole(value as "admin" | "super_admin" | "caissier" | "commercial" | "")}
                 options={roleOptions}
                 placeholder="Sélectionnez un rôle"
               />
@@ -565,7 +562,7 @@ export default function EditAdminModal({
               isWarningAlertVisible ? "opacity-100" : "opacity-0"
             }`}
           >
-            <Alert variant="warning" message="Tous les champs sont requis" />
+            <Alert variant="warning" title="Attention" message="Tous les champs sont requis" />
           </div>
         )}
 
@@ -576,7 +573,7 @@ export default function EditAdminModal({
               isSuccessAlertVisible ? "opacity-100" : "opacity-0"
             }`}
           >
-            <Alert variant="success" message="Administrateur modifié avec succès" />
+            <Alert variant="success" title="Succès" message="Administrateur modifié avec succès" />
           </div>
         )}
       </div>
