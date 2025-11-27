@@ -239,15 +239,17 @@ export const getProductImages = (product: Product): string[] => {
     product.all_photos.forEach((photo) => {
       // Détecter is_primary de manière robuste (peut être 1, "1", true, ou booléen)
       const isPrimaryValue = photo.is_primary;
-      const isPrimary = 
-        isPrimaryValue !== undefined &&
-        isPrimaryValue !== null &&
-        (
-          isPrimaryValue === 1 || 
-          isPrimaryValue === "1" || 
-          (typeof isPrimaryValue === 'boolean' && isPrimaryValue === true) ||
-          String(isPrimaryValue).toLowerCase() === "true"
-        );
+      let isPrimary = false;
+      
+      if (isPrimaryValue !== undefined && isPrimaryValue !== null) {
+        if (typeof isPrimaryValue === 'boolean') {
+          isPrimary = isPrimaryValue === true;
+        } else if (typeof isPrimaryValue === 'number') {
+          isPrimary = isPrimaryValue === 1;
+        } else if (typeof isPrimaryValue === 'string') {
+          isPrimary = isPrimaryValue === "1" || isPrimaryValue.toLowerCase() === "true";
+        }
+      }
       
       let imageUrl: string | null = null;
 
@@ -284,15 +286,17 @@ export const getProductImages = (product: Product): string[] => {
     product.photos.forEach((photo) => {
       // Détecter is_primary de manière robuste (peut être 1, "1", true, ou booléen)
       const isPrimaryValue = photo.is_primary;
-      const isPrimary = 
-        isPrimaryValue !== undefined &&
-        isPrimaryValue !== null &&
-        (
-          isPrimaryValue === 1 || 
-          isPrimaryValue === "1" || 
-          (typeof isPrimaryValue === 'boolean' && isPrimaryValue === true) ||
-          String(isPrimaryValue).toLowerCase() === "true"
-        );
+      let isPrimary = false;
+      
+      if (isPrimaryValue !== undefined && isPrimaryValue !== null) {
+        if (typeof isPrimaryValue === 'boolean') {
+          isPrimary = isPrimaryValue === true;
+        } else if (typeof isPrimaryValue === 'number') {
+          isPrimary = isPrimaryValue === 1;
+        } else if (typeof isPrimaryValue === 'string') {
+          isPrimary = isPrimaryValue === "1" || isPrimaryValue.toLowerCase() === "true";
+        }
+      }
       
       let imageUrl: string | null = null;
 

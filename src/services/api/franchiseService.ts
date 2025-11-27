@@ -326,12 +326,12 @@ const franchiseService = {
       
       // Si la réponse contient un objet boutique directement
       if (responseData.boutique && typeof responseData.boutique === 'object') {
-        return responseData.boutique as Boutique;
+        return responseData.boutique as unknown as Boutique;
       }
       
       // Si la réponse contient un objet data avec la boutique
       if (responseData.data && typeof responseData.data === 'object') {
-        return responseData.data as Boutique;
+        return responseData.data as unknown as Boutique;
       }
       
       // Si la réponse est directement l'objet boutique
@@ -367,11 +367,17 @@ const franchiseService = {
         }
         
         const errorData = axiosError.response?.data;
-        const errorMessage: string = 
-          (typeof errorData?.message === 'string' ? errorData.message : undefined) ||
-          (typeof errorData?.error === 'string' ? errorData.error : undefined) ||
-          (typeof errorData?.msg === 'string' ? errorData.msg : undefined) ||
-          `Erreur ${status || 'inconnue'}: ${axiosError.response?.statusText || 'Une erreur est survenue'}`;
+        let errorMessage: string = `Erreur ${status || 'inconnue'}: ${axiosError.response?.statusText || 'Une erreur est survenue'}`;
+        
+        if (errorData) {
+          if (typeof errorData.message === 'string') {
+            errorMessage = errorData.message;
+          } else if (typeof errorData.error === 'string') {
+            errorMessage = errorData.error;
+          } else if (typeof errorData.msg === 'string') {
+            errorMessage = errorData.msg;
+          }
+        }
         
         throw new Error(errorMessage);
       }
@@ -543,12 +549,19 @@ const franchiseService = {
         }
         
         // Message d'erreur générique
-        const errorMessage: string = 
-          (typeof apiError?.message === 'string' ? apiError.message : undefined) ||
-          (typeof apiError?.error === 'string' ? apiError.error : undefined) ||
-          (typeof apiError?.msg === 'string' ? apiError.msg : undefined) ||
-          (status ? `Erreur ${status}: ${axiosError.response?.statusText}` : "Erreur lors de la création de la boutique");
-        return { success: false, error: errorMessage || "Erreur lors de la création de la boutique" };
+        let errorMessage: string = status ? `Erreur ${status}: ${axiosError.response?.statusText}` : "Erreur lors de la création de la boutique";
+        
+        if (apiError) {
+          if (typeof apiError.message === 'string') {
+            errorMessage = apiError.message;
+          } else if (typeof apiError.error === 'string') {
+            errorMessage = apiError.error;
+          } else if (typeof apiError.msg === 'string') {
+            errorMessage = apiError.msg;
+          }
+        }
+        
+        return { success: false, error: errorMessage };
       }
       
       // Erreur réseau ou autre
@@ -724,12 +737,19 @@ const franchiseService = {
         }
         
         // Message d'erreur générique
-        const errorMessage: string = 
-          (typeof apiError?.message === 'string' ? apiError.message : undefined) ||
-          (typeof apiError?.error === 'string' ? apiError.error : undefined) ||
-          (typeof apiError?.msg === 'string' ? apiError.msg : undefined) ||
-          (status ? `Erreur ${status}: ${axiosError.response?.statusText}` : "Erreur lors de la modification de la boutique");
-        throw new Error(errorMessage || "Erreur lors de la modification de la boutique");
+        let errorMessage: string = status ? `Erreur ${status}: ${axiosError.response?.statusText}` : "Erreur lors de la modification de la boutique";
+        
+        if (apiError) {
+          if (typeof apiError.message === 'string') {
+            errorMessage = apiError.message;
+          } else if (typeof apiError.error === 'string') {
+            errorMessage = apiError.error;
+          } else if (typeof apiError.msg === 'string') {
+            errorMessage = apiError.msg;
+          }
+        }
+        
+        throw new Error(errorMessage);
       }
       
       // Erreur réseau ou autre
