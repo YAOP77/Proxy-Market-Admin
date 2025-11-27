@@ -165,7 +165,7 @@ const fetchBoutiquesPage = async (page: number): Promise<{
     
     // Si la réponse contient un objet avec une propriété boutiques
     if (responseData.boutiques && Array.isArray(responseData.boutiques)) {
-      const boutiques = responseData.boutiques as Boutique[];
+      const boutiques = responseData.boutiques as unknown as Boutique[];
       // Convertir en format paginé avec une seule page
       return {
         data: boutiques,
@@ -231,11 +231,17 @@ const fetchBoutiquesPage = async (page: number): Promise<{
       }
       
       const errorData = axiosError.response?.data;
-      const errorMessage = 
-        (typeof errorData?.message === 'string' ? errorData.message : undefined) ||
-        (typeof errorData?.error === 'string' ? errorData.error : undefined) ||
-        (typeof errorData?.msg === 'string' ? errorData.msg : undefined) ||
-        `Erreur ${status || 'inconnue'}: ${axiosError.response?.statusText || 'Une erreur est survenue'}`;
+      let errorMessage: string = `Erreur ${status || 'inconnue'}: ${axiosError.response?.statusText || 'Une erreur est survenue'}`;
+      
+      if (errorData) {
+        if (typeof errorData.message === 'string') {
+          errorMessage = errorData.message;
+        } else if (typeof errorData.error === 'string') {
+          errorMessage = errorData.error;
+        } else if (typeof errorData.msg === 'string') {
+          errorMessage = errorData.msg;
+        }
+      }
       
       throw new Error(errorMessage);
     }
