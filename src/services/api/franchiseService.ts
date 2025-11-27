@@ -230,10 +230,12 @@ const fetchBoutiquesPage = async (page: number): Promise<{
         throw new Error("Endpoint non trouvé. Veuillez contacter l'administrateur.");
       }
       
-      const errorMessage = axiosError.response?.data?.message 
-        || axiosError.response?.data?.error 
-        || axiosError.response?.data?.msg
-        || `Erreur ${status || 'inconnue'}: ${axiosError.response?.statusText || 'Une erreur est survenue'}`;
+      const errorData = axiosError.response?.data;
+      const errorMessage = 
+        (typeof errorData?.message === 'string' ? errorData.message : undefined) ||
+        (typeof errorData?.error === 'string' ? errorData.error : undefined) ||
+        (typeof errorData?.msg === 'string' ? errorData.msg : undefined) ||
+        `Erreur ${status || 'inconnue'}: ${axiosError.response?.statusText || 'Une erreur est survenue'}`;
       
       throw new Error(errorMessage);
     }
@@ -334,7 +336,7 @@ const franchiseService = {
       
       // Si la réponse est directement l'objet boutique
       if (responseData.id && typeof responseData.id === 'string') {
-        return responseData as Boutique;
+        return responseData as unknown as Boutique;
       }
       
       throw new Error("Structure de réponse API non reconnue");
@@ -364,10 +366,12 @@ const franchiseService = {
           throw new Error("Boutique non trouvée.");
         }
         
-        const errorMessage = axiosError.response?.data?.message 
-          || axiosError.response?.data?.error 
-          || axiosError.response?.data?.msg
-          || `Erreur ${status || 'inconnue'}: ${axiosError.response?.statusText || 'Une erreur est survenue'}`;
+        const errorData = axiosError.response?.data;
+        const errorMessage = 
+          (typeof errorData?.message === 'string' ? errorData.message : undefined) ||
+          (typeof errorData?.error === 'string' ? errorData.error : undefined) ||
+          (typeof errorData?.msg === 'string' ? errorData.msg : undefined) ||
+          `Erreur ${status || 'inconnue'}: ${axiosError.response?.statusText || 'Une erreur est survenue'}`;
         
         throw new Error(errorMessage);
       }
@@ -540,9 +544,9 @@ const franchiseService = {
         
         // Message d'erreur générique
         const errorMessage = 
-          apiError?.message || 
-          apiError?.error || 
-          apiError?.msg ||
+          (typeof apiError?.message === 'string' ? apiError.message : undefined) ||
+          (typeof apiError?.error === 'string' ? apiError.error : undefined) ||
+          (typeof apiError?.msg === 'string' ? apiError.msg : undefined) ||
           (status ? `Erreur ${status}: ${axiosError.response?.statusText}` : "Erreur lors de la création de la boutique");
         return { success: false, error: errorMessage || "Erreur lors de la création de la boutique" };
       }
@@ -721,9 +725,9 @@ const franchiseService = {
         
         // Message d'erreur générique
         const errorMessage = 
-          apiError?.message || 
-          apiError?.error || 
-          apiError?.msg ||
+          (typeof apiError?.message === 'string' ? apiError.message : undefined) ||
+          (typeof apiError?.error === 'string' ? apiError.error : undefined) ||
+          (typeof apiError?.msg === 'string' ? apiError.msg : undefined) ||
           (status ? `Erreur ${status}: ${axiosError.response?.statusText}` : "Erreur lors de la modification de la boutique");
         throw new Error(errorMessage || "Erreur lors de la modification de la boutique");
       }

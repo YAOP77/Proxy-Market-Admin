@@ -12,7 +12,7 @@ import apiClient from "./axiosConfig";
 import productService, { Product } from "./productService";
 import franchiseService, { Boutique } from "./franchiseService";
 import boutiqueUserService, { BoutiqueUser } from "./boutiqueUserService";
-import adminService, { Admin } from "./adminService";
+import { Admin } from "./adminService";
 
 /**
  * Interface pour un résultat de recherche

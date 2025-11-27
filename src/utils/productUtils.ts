@@ -136,10 +136,16 @@ export const getProductImage = (product: Product): string => {
     // Trouver la photo principale (is_primary peut être 1, "1", true, ou booléen)
     const primaryPhoto = product.all_photos.find((photo) => {
       const isPrimaryValue = photo.is_primary;
+      if (isPrimaryValue === undefined || isPrimaryValue === null) {
+        return false;
+      }
+      // isPrimaryValue peut être 1, "1", true, ou une string "true"
+      if (typeof isPrimaryValue === 'boolean') {
+        return isPrimaryValue === true;
+      }
       return (
         isPrimaryValue === 1 || 
         isPrimaryValue === "1" || 
-        isPrimaryValue === true ||
         String(isPrimaryValue).toLowerCase() === "true"
       );
     }) || product.all_photos[0];
@@ -175,10 +181,16 @@ export const getProductImage = (product: Product): string => {
   if (product.photos && Array.isArray(product.photos) && product.photos.length > 0) {
     const primaryPhoto = product.photos.find((photo) => {
       const isPrimaryValue = photo.is_primary;
+      if (isPrimaryValue === undefined || isPrimaryValue === null) {
+        return false;
+      }
+      // isPrimaryValue peut être 1, "1", true, ou une string "true"
+      if (typeof isPrimaryValue === 'boolean') {
+        return isPrimaryValue === true;
+      }
       return (
         isPrimaryValue === 1 || 
         isPrimaryValue === "1" || 
-        isPrimaryValue === true ||
         String(isPrimaryValue).toLowerCase() === "true"
       );
     }) || product.photos[0];
@@ -224,10 +236,14 @@ export const getProductImages = (product: Product): string[] => {
       // Détecter is_primary de manière robuste (peut être 1, "1", true, ou booléen)
       const isPrimaryValue = photo.is_primary;
       const isPrimary = 
-        isPrimaryValue === 1 || 
-        isPrimaryValue === "1" || 
-        isPrimaryValue === true ||
-        String(isPrimaryValue).toLowerCase() === "true";
+        isPrimaryValue !== undefined &&
+        isPrimaryValue !== null &&
+        (
+          isPrimaryValue === 1 || 
+          isPrimaryValue === "1" || 
+          (typeof isPrimaryValue === 'boolean' && isPrimaryValue === true) ||
+          String(isPrimaryValue).toLowerCase() === "true"
+        );
       
       let imageUrl: string | null = null;
 
@@ -265,10 +281,14 @@ export const getProductImages = (product: Product): string[] => {
       // Détecter is_primary de manière robuste (peut être 1, "1", true, ou booléen)
       const isPrimaryValue = photo.is_primary;
       const isPrimary = 
-        isPrimaryValue === 1 || 
-        isPrimaryValue === "1" || 
-        isPrimaryValue === true ||
-        String(isPrimaryValue).toLowerCase() === "true";
+        isPrimaryValue !== undefined &&
+        isPrimaryValue !== null &&
+        (
+          isPrimaryValue === 1 || 
+          isPrimaryValue === "1" || 
+          (typeof isPrimaryValue === 'boolean' && isPrimaryValue === true) ||
+          String(isPrimaryValue).toLowerCase() === "true"
+        );
       
       let imageUrl: string | null = null;
 
