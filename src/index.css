@@ -41,31 +41,33 @@ layer(base);
   --color-white: #ffffff;
   --color-black: #101828;
 
-  --color-brand-25: #f2f7ff;
-  --color-brand-50: #ecf3ff;
-  --color-brand-100: #dde9ff;
-  --color-brand-200: #c2d6ff;
-  --color-brand-300: #9cb9ff;
-  --color-brand-400: #7592ff;
-  --color-brand-500: #465fff;
-  --color-brand-600: #3641f5;
-  --color-brand-700: #2a31d8;
-  --color-brand-800: #252dae;
-  --color-brand-900: #262e89;
-  --color-brand-950: #161950;
+  /* Couleurs brand - Proxy Market (#00A796) */
+  --color-brand-25: rgba(0, 167, 150, 0.05);
+  --color-brand-50: rgba(0, 167, 150, 0.1);
+  --color-brand-100: rgba(0, 167, 150, 0.15);
+  --color-brand-200: rgba(0, 167, 150, 0.25);
+  --color-brand-300: rgba(0, 167, 150, 0.4);
+  --color-brand-400: rgba(0, 167, 150, 0.6);
+  --color-brand-500: #00A796;
+  --color-brand-600: #008B7E;
+  --color-brand-700: #007066;
+  --color-brand-800: #00564F;
+  --color-brand-900: #003C37;
+  --color-brand-950: #002822;
 
-  --color-blue-light-25: #f5fbff;
-  --color-blue-light-50: #f0f9ff;
-  --color-blue-light-100: #e0f2fe;
-  --color-blue-light-200: #b9e6fe;
-  --color-blue-light-300: #7cd4fd;
-  --color-blue-light-400: #36bffa;
-  --color-blue-light-500: #0ba5ec;
-  --color-blue-light-600: #0086c9;
-  --color-blue-light-700: #026aa2;
-  --color-blue-light-800: #065986;
-  --color-blue-light-900: #0b4a6f;
-  --color-blue-light-950: #062c41;
+  /* Couleurs blue-light - Proxy Market (#00A796 avec opacité 20%) */
+  --color-blue-light-25: rgba(0, 167, 150, 0.05);
+  --color-blue-light-50: rgba(0, 167, 150, 0.1);
+  --color-blue-light-100: rgba(0, 167, 150, 0.15);
+  --color-blue-light-200: rgba(0, 167, 150, 0.2);
+  --color-blue-light-300: rgba(0, 167, 150, 0.2);
+  --color-blue-light-400: rgba(0, 167, 150, 0.2);
+  --color-blue-light-500: rgba(0, 167, 150, 0.2);
+  --color-blue-light-600: rgba(0, 167, 150, 0.2);
+  --color-blue-light-700: rgba(0, 167, 150, 0.2);
+  --color-blue-light-800: rgba(0, 167, 150, 0.2);
+  --color-blue-light-900: rgba(0, 167, 150, 0.2);
+  --color-blue-light-950: rgba(0, 167, 150, 0.2);
 
   --color-gray-25: #fcfcfd;
   --color-gray-50: #f9fafb;
@@ -186,7 +188,7 @@ layer(base);
     cursor: pointer;
   }
   body {
-    @apply relative font-normal font-outfit z-1 bg-gray-50;
+    @apply relative font-normal font-outfit z-1 bg-gray-25;
   }
 }
 
@@ -195,7 +197,7 @@ layer(base);
 }
 
 @utility menu-item-active {
-  @apply bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400;
+  @apply bg-[#04b05d]/10 text-[#04b05d] dark:bg-[#04b05d]/12 dark:text-[#04b05d];
 }
 
 @utility menu-item-inactive {
@@ -207,7 +209,7 @@ layer(base);
 }
 
 @utility menu-item-icon-active {
-  @apply text-brand-500 dark:text-brand-400;
+  @apply text-[#04b05d] dark:text-[#04b05d];
 }
 
 @utility menu-item-icon-size {
@@ -225,7 +227,7 @@ layer(base);
 }
 
 @utility menu-item-arrow-active {
-  @apply rotate-180 text-brand-500 dark:text-brand-400;
+  @apply rotate-180 text-[#04b05d] dark:text-[#04b05d];
 }
 
 @utility menu-item-arrow-inactive {
@@ -237,7 +239,7 @@ layer(base);
 }
 
 @utility menu-dropdown-item-active {
-  @apply bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400;
+  @apply bg-[#04b05d]/10 text-[#04b05d] dark:bg-[#04b05d]/12 dark:text-[#04b05d];
 }
 
 @utility menu-dropdown-item-inactive {
@@ -245,15 +247,15 @@ layer(base);
 }
 
 @utility menu-dropdown-badge {
-  @apply block rounded-full px-2.5 py-0.5 text-xs font-medium uppercase text-brand-500 dark:text-brand-400;
+  @apply block rounded-full px-2.5 py-0.5 text-xs font-medium uppercase text-[#04b05d] dark:text-[#04b05d];
 }
 
 @utility menu-dropdown-badge-active {
-  @apply bg-brand-100 dark:bg-brand-500/20;
+  @apply bg-[#04b05d]/15 dark:bg-[#04b05d]/20;
 }
 
 @utility menu-dropdown-badge-inactive {
-  @apply bg-brand-50 group-hover:bg-brand-100 dark:bg-brand-500/15 dark:group-hover:bg-brand-500/20;
+  @apply bg-[#04b05d]/10 group-hover:bg-[#04b05d]/15 dark:bg-[#04b05d]/15 dark:group-hover:bg-[#04b05d]/20;
 }
 @utility no-scrollbar {
   /* Chrome, Safari and Opera */

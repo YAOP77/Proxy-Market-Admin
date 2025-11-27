@@ -1,10 +1,33 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useNavigate } from "react-router";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { Dropdown } from "../ui/dropdown/Dropdown";
-import { Link } from "react-router";
+import { useAuth } from "../../context/AuthContext";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  // Récupérer les informations de l'utilisateur depuis le contexte ou le localStorage
+  const userData = useMemo(() => {
+    if (user) return user;
+    
+    try {
+      const storedUser = localStorage.getItem("proxy_market_user");
+      if (storedUser) {
+        return JSON.parse(storedUser);
+      }
+    } catch (error) {
+      // Ignorer les erreurs de parsing
+    }
+    
+    // Valeurs par défaut
+    return {
+      name: "Admin",
+      email: "admin@proxymarket.com"
+    };
+  }, [user]);
 
   function toggleDropdown() {
     setIsOpen(!isOpen);
@@ -13,6 +36,23 @@ export default function UserDropdown() {
   function closeDropdown() {
     setIsOpen(false);
   }
+
+  const handleLogout = async () => {
+    try {
+      // Fermer le dropdown avant la déconnexion
+      closeDropdown();
+      
+      // Appeler la fonction de déconnexion
+      await logout();
+      
+      // Rediriger vers la page de connexion après déconnexion réussie
+      navigate("/signin", { replace: true });
+    } catch (error) {
+      // En cas d'erreur, rediriger quand même vers la page de connexion
+      // pour s'assurer que l'utilisateur est déconnecté côté client
+      navigate("/signin", { replace: true });
+    }
+  };
   return (
     <div className="relative">
       <button
@@ -23,7 +63,9 @@ export default function UserDropdown() {
           <img src="/images/user/owner.jpg" alt="User" />
         </span>
 
-        <span className="block mr-1 font-medium text-theme-sm">Musharof</span>
+        <span className="block mr-1 font-semibold text-sm text-[#04b05d] dark:text-[#04b05d]">
+          {userData.name}
+        </span>
         <svg
           className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""
@@ -51,10 +93,10 @@ export default function UserDropdown() {
       >
         <div>
           <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
-            Musharof Chowdhury
+            {userData.name}
           </span>
           <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
-            randomuser@pimjo.com
+            {userData.email}
           </span>
         </div>
 
@@ -135,12 +177,12 @@ export default function UserDropdown() {
             </DropdownItem>
           </li>
         </ul>
-        <Link
-          to="/signin"
-          className="flex items-center gap-3 px-3 py-2 mt-3 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3 px-3 py-2 mt-3 font-medium text-red-600 rounded-lg group text-theme-sm hover:bg-red-50 hover:text-red-700 dark:text-red-500 dark:hover:bg-red-500/10 dark:hover:text-red-400 w-full text-left"
         >
           <svg
-            className="fill-gray-500 group-hover:fill-gray-700 dark:group-hover:fill-gray-300"
+            className="fill-red-600 group-hover:fill-red-700 dark:fill-red-500 dark:group-hover:fill-red-400"
             width="24"
             height="24"
             viewBox="0 0 24 24"
@@ -155,7 +197,7 @@ export default function UserDropdown() {
             />
           </svg>
           Sign out
-        </Link>
+        </button>
       </Dropdown>
     </div>
   );

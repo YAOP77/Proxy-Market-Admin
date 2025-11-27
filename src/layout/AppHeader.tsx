@@ -1,16 +1,38 @@
-import { useEffect, useRef, useState } from "react";
+  /**
+ * Composant AppHeader - En-tête de l'application
+ * 
+ * Ce composant affiche :
+ * - Bouton de toggle de la sidebar (mobile et desktop)
+ * - Logo sur mobile
+ * - Barre de recherche avec raccourci clavier (Cmd/Ctrl + K)
+ * - Toggle du thème (light/dark)
+ * - Menu des notifications
+ * - Menu utilisateur
+ * 
+ * Le header est sticky et reste visible lors du scroll.
+ */
 
-import { Link } from "react-router";
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router";
 import { useSidebar } from "../context/SidebarContext";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
 import NotificationDropdown from "../components/header/NotificationDropdown";
 import UserDropdown from "../components/header/UserDropdown";
 
 const AppHeader: React.FC = () => {
+  // État pour le menu d'application (mobile)
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
-
+  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
+  
+  // Accès au contexte sidebar pour gérer l'ouverture/fermeture
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
 
+  /**
+   * Gère le toggle de la sidebar selon le type d'écran
+   * - Desktop (>= 1024px) : toggle de la sidebar étendue/réduite
+   * - Mobile (< 1024px) : toggle de la sidebar mobile (ouvert/fermé)
+   */
   const handleToggle = () => {
     if (window.innerWidth >= 1024) {
       toggleSidebar();
@@ -19,14 +41,23 @@ const AppHeader: React.FC = () => {
     }
   };
 
+  /**
+   * Bascule l'état du menu d'application (mobile)
+   */
   const toggleApplicationMenu = () => {
     setApplicationMenuOpen(!isApplicationMenuOpen);
   };
 
+  // Référence pour le champ de recherche (pour le focus programmatique)
   const inputRef = useRef<HTMLInputElement>(null);
 
+  /**
+   * Gestion du raccourci clavier pour la recherche (Cmd/Ctrl + K)
+   * Permet de rapidement accéder à la barre de recherche
+   */
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Détection de Cmd (Mac) ou Ctrl (Windows/Linux) + K
       if ((event.metaKey || event.ctrlKey) && event.key === "k") {
         event.preventDefault();
         inputRef.current?.focus();
@@ -35,10 +66,33 @@ const AppHeader: React.FC = () => {
 
     document.addEventListener("keydown", handleKeyDown);
 
+    // Nettoyage de l'écouteur lors du démontage
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
+
+  /**
+   * Gère la soumission du formulaire de recherche
+   */
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  /**
+   * Gère la touche Entrée dans le champ de recherche
+   */
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (searchQuery.trim()) {
+        navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      }
+    }
+  };
 
   return (
     <header className="sticky top-0 flex w-full bg-white border-gray-200 z-99999 dark:border-gray-800 dark:bg-gray-900 lg:border-b">
@@ -85,14 +139,9 @@ const AppHeader: React.FC = () => {
 
           <Link to="/" className="lg:hidden">
             <img
-              className="dark:hidden"
-              src="./images/logo/logo.svg"
-              alt="Logo"
-            />
-            <img
-              className="hidden dark:block"
-              src="./images/logo/logo-dark.svg"
-              alt="Logo"
+              src="/Logo-Proxy-Market.png"
+              alt="Proxy Market Logo"
+              className="h-12 sm:h-16 w-auto"
             />
           </Link>
 
@@ -117,7 +166,7 @@ const AppHeader: React.FC = () => {
           </button>
 
           <div className="hidden lg:block">
-            <form>
+            <form onSubmit={handleSearchSubmit}>
               <div className="relative">
                 <span className="absolute -translate-y-1/2 pointer-events-none left-4 top-1/2">
                   <svg
@@ -139,11 +188,18 @@ const AppHeader: React.FC = () => {
                 <input
                   ref={inputRef}
                   type="text"
-                  placeholder="Search or type command..."
+                  placeholder="Rechercher produits, boutiques, franchisés..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={handleSearchKeyDown}
                   className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-200 bg-transparent py-2.5 pl-12 pr-14 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-800 dark:bg-gray-900 dark:bg-white/[0.03] dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 xl:w-[430px]"
                 />
 
-                <button className="absolute right-2.5 top-1/2 inline-flex -translate-y-1/2 items-center gap-0.5 rounded-lg border border-gray-200 bg-gray-50 px-[7px] py-[4.5px] text-xs -tracking-[0.2px] text-gray-500 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400">
+                <button
+                  type="button"
+                  onClick={handleSearchSubmit}
+                  className="absolute right-2.5 top-1/2 inline-flex -translate-y-1/2 items-center gap-0.5 rounded-lg border border-gray-200 bg-gray-50 px-[7px] py-[4.5px] text-xs -tracking-[0.2px] text-gray-500 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400"
+                >
                   <span> ⌘ </span>
                   <span> K </span>
                 </button>

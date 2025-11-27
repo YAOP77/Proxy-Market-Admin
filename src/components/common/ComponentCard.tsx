@@ -1,8 +1,12 @@
+import { ReactNode } from "react";
+
 interface ComponentCardProps {
-  title: string;
-  children: React.ReactNode;
+  title: string | ReactNode;
+  children: ReactNode;
   className?: string; // Additional custom classes for styling
   desc?: string; // Description text
+  action?: ReactNode; // Optional action element in the header
+  titleClassName?: string; // Optional custom classes for the title
 }
 
 const ComponentCard: React.FC<ComponentCardProps> = ({
@@ -10,6 +14,8 @@ const ComponentCard: React.FC<ComponentCardProps> = ({
   children,
   className = "",
   desc = "",
+  action,
+  titleClassName = "",
 }) => {
   return (
     <div
@@ -17,9 +23,18 @@ const ComponentCard: React.FC<ComponentCardProps> = ({
     >
       {/* Card Header */}
       <div className="px-6 py-5">
-        <h3 className="text-base font-medium text-gray-800 dark:text-white/90">
-          {title}
-        </h3>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h3 
+            className={
+              titleClassName 
+                ? titleClassName 
+                : "text-base font-medium text-gray-800 dark:text-white/90"
+            }
+          >
+            {title}
+          </h3>
+          {action && <div className="flex items-center justify-start sm:justify-end">{action}</div>}
+        </div>
         {desc && (
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {desc}

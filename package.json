@@ -1,7 +1,8 @@
 {
-  "name": "tailadmin-react",
+  "name": "proxy-market-dashboard",
   "private": true,
-  "version": "2.0.2",
+  "version": "1.0.0",
+  "description": "Dashboard de gestion pour Proxy Market",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -16,9 +17,11 @@
     "@fullcalendar/list": "^6.1.15",
     "@fullcalendar/react": "^6.1.15",
     "@fullcalendar/timegrid": "^6.1.15",
+    "@react-google-maps/api": "^2.20.7",
     "@react-jvectormap/core": "^1.0.4",
     "@react-jvectormap/world": "^1.1.2",
     "apexcharts": "^4.1.0",
+    "axios": "^1.13.2",
     "clsx": "^2.1.1",
     "flatpickr": "^4.6.13",
     "react": "^19.0.0",
