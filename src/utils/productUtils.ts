@@ -143,11 +143,13 @@ export const getProductImage = (product: Product): string => {
       if (typeof isPrimaryValue === 'boolean') {
         return isPrimaryValue === true;
       }
-      return (
-        isPrimaryValue === 1 || 
-        isPrimaryValue === "1" || 
-        String(isPrimaryValue).toLowerCase() === "true"
-      );
+      if (typeof isPrimaryValue === 'number') {
+        return isPrimaryValue === 1;
+      }
+      if (typeof isPrimaryValue === 'string') {
+        return isPrimaryValue === "1" || isPrimaryValue.toLowerCase() === "true";
+      }
+      return false;
     }) || product.all_photos[0];
 
     // Vérifier si l'URL de la photo est valide
@@ -188,11 +190,13 @@ export const getProductImage = (product: Product): string => {
       if (typeof isPrimaryValue === 'boolean') {
         return isPrimaryValue === true;
       }
-      return (
-        isPrimaryValue === 1 || 
-        isPrimaryValue === "1" || 
-        String(isPrimaryValue).toLowerCase() === "true"
-      );
+      if (typeof isPrimaryValue === 'number') {
+        return isPrimaryValue === 1;
+      }
+      if (typeof isPrimaryValue === 'string') {
+        return isPrimaryValue === "1" || isPrimaryValue.toLowerCase() === "true";
+      }
+      return false;
     }) || product.photos[0];
 
     if (primaryPhoto.url && isValidImageUrl(primaryPhoto.url)) {

@@ -367,7 +367,7 @@ const franchiseService = {
         }
         
         const errorData = axiosError.response?.data;
-        const errorMessage = 
+        const errorMessage: string = 
           (typeof errorData?.message === 'string' ? errorData.message : undefined) ||
           (typeof errorData?.error === 'string' ? errorData.error : undefined) ||
           (typeof errorData?.msg === 'string' ? errorData.msg : undefined) ||
@@ -543,7 +543,7 @@ const franchiseService = {
         }
         
         // Message d'erreur générique
-        const errorMessage = 
+        const errorMessage: string = 
           (typeof apiError?.message === 'string' ? apiError.message : undefined) ||
           (typeof apiError?.error === 'string' ? apiError.error : undefined) ||
           (typeof apiError?.msg === 'string' ? apiError.msg : undefined) ||
@@ -724,7 +724,7 @@ const franchiseService = {
         }
         
         // Message d'erreur générique
-        const errorMessage = 
+        const errorMessage: string = 
           (typeof apiError?.message === 'string' ? apiError.message : undefined) ||
           (typeof apiError?.error === 'string' ? apiError.error : undefined) ||
           (typeof apiError?.msg === 'string' ? apiError.msg : undefined) ||
