@@ -970,7 +970,10 @@ export const adminService = {
       
       // Structure de réponse non reconnue
       if (import.meta.env.DEV) {
-        console.warn("getCommunes: Structure de réponse non reconnue", response.data);
+        // Ne pas logger response.data pour éviter d'exposer des informations sensibles
+        if (import.meta.env.DEV) {
+          console.warn("getCommunes: Structure de réponse non reconnue");
+        }
       }
       
       return [];
@@ -1003,10 +1006,8 @@ export const adminService = {
         
         // Autres erreurs HTTP : retourner un tableau vide mais logger en mode développement
         if (import.meta.env.DEV) {
-          console.error("getCommunes: Erreur lors de la récupération des communes", {
-            status,
-            message: apiError?.message || apiError?.error,
-          });
+          // Ne logger que le statut, pas les détails de l'erreur pour éviter d'exposer des informations sensibles
+          console.error("getCommunes: Erreur lors de la récupération des communes (statut:", status + ")");
         }
         
         // Retourner un tableau vide pour ne pas bloquer le formulaire
@@ -1023,9 +1024,9 @@ export const adminService = {
       } else {
         // Autre type d'erreur : propager si c'est une Error, sinon retourner un tableau vide
         if (error instanceof Error) {
-          // En mode développement, logger l'erreur
+          // En mode développement, logger uniquement le message, pas l'objet complet
           if (import.meta.env.DEV) {
-            console.error("getCommunes: Erreur inattendue", error);
+            console.error("getCommunes: Erreur inattendue:", error.message);
           }
           // Ne pas propager l'erreur pour ne pas bloquer le formulaire
           return [];

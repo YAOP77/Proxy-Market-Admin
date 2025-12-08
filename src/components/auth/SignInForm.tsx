@@ -20,6 +20,18 @@ export default function SignInForm() {
   const location = useLocation();
 
   /**
+   * Vérifie si l'utilisateur a été redirigé pour une raison "unauthorized"
+   */
+  useEffect(() => {
+    const state = location.state as { reason?: string } | null;
+    if (state?.reason === "unauthorized") {
+      setError("Accès refusé. Vous n'avez pas les droits nécessaires pour accéder à cette application.");
+      // Nettoyer l'état de navigation pour éviter de réafficher le message
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
+  /**
    * Gère l'affichage et la disparition de l'alerte d'avertissement avec transition
    */
   useEffect(() => {

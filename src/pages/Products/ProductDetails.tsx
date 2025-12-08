@@ -59,12 +59,8 @@ export default function ProductDetails() {
       setSelectedImageIndex(0);
       
       if (import.meta.env.DEV && productData.all_photos) {
-        console.log("[ProductDetails] Images chargées:", productData.all_photos.map((p: any) => ({
-          id: p.id,
-          is_primary: p.is_primary,
-          type: typeof p.is_primary,
-          url: p.photo || p.url,
-        })));
+        // Ne pas logger les URLs complètes pour éviter d'exposer des informations
+        console.log("[ProductDetails] Nombre d'images chargées:", productData.all_photos.length);
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erreur lors du chargement du produit";
@@ -95,7 +91,8 @@ export default function ProductDetails() {
     const productImages = getProductImages(product);
     
     if (import.meta.env.DEV) {
-      console.log("[ProductDetails] Images après getProductImages:", productImages);
+      // Ne pas logger les données d'images complètes pour éviter d'exposer des informations
+      console.log("[ProductDetails] Nombre d'images traitées:", productImages.length);
     }
     
     return productImages;
@@ -227,7 +224,15 @@ export default function ProductDetails() {
                         />
                         {/* Badge de statut sur l'image */}
                         <div className="absolute top-2 right-2">
-                          <Badge color={statusColor} size="sm">
+                          <Badge 
+                            color={statusColor} 
+                            size="sm"
+                            className={
+                              statusColor === "success" 
+                                ? "border border-green-300 dark:border-green-600" 
+                                : ""
+                            }
+                          >
                             {statusLabel}
                           </Badge>
                         </div>
@@ -272,7 +277,11 @@ export default function ProductDetails() {
                             {product.libelle}
                           </h1>
                           <div className="mt-2">
-                            <Badge color="warning" size="sm">
+                            <Badge 
+                              color="warning" 
+                              size="sm"
+                              className="border border-orange-300 dark:border-orange-600"
+                            >
                               {getCategoryName(product)}
                             </Badge>
                           </div>
@@ -346,26 +355,47 @@ export default function ProductDetails() {
                 )}
 
                 {/* Informations supplémentaires */}
-                <ComponentCard title="Informations supplémentaires">
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="rounded-lg border border-gray-200 p-4 dark:border-white/10">
-                      <p className="mb-1 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+                  <div className="border-b border-gray-100 bg-gray-50 px-6 py-4 dark:border-white/[0.05] dark:bg-white/[0.02]">
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">Informations supplémentaires</h3>
+                  </div>
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                      <div>
+                        <p className="mb-1.5 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
                         Date de création
                       </p>
                       <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                         {formatDate(product.created_at)}
                       </p>
                     </div>
-                    <div className="rounded-lg border border-gray-200 p-4 dark:border-white/10">
-                      <p className="mb-1 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                      <div>
+                        <p className="mb-1.5 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
                         Dernière mise à jour
                       </p>
                       <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                         {formatDate(product.updated_at)}
                       </p>
+                      </div>
+                      <div>
+                        <p className="mb-1.5 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                          Statut
+                        </p>
+                        <Badge 
+                          color={statusColor} 
+                          size="sm"
+                          className={
+                            statusColor === "success" 
+                              ? "border border-green-300 dark:border-green-600" 
+                              : ""
+                          }
+                        >
+                          {statusLabel}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
-                </ComponentCard>
+                </div>
               </div>
             </ComponentCard>
           </div>

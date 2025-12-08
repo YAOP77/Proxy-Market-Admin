@@ -31,22 +31,22 @@ export default function EcommerceMetrics() {
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 md:gap-6">
-      {/* <!-- Metric Item Start --> */}
-      <div className="rounded-2xl border border-gray-300 bg-white p-5 dark:border-gray-700 dark:bg-white/[0.03] md:p-6">
-        <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
-          <GroupIcon className="text-gray-800 size-6 dark:text-white/90" />
+      {/* <!-- Metric Item Start - Clients avec fond jaune --> */}
+      <div className="rounded-2xl border border-yellow-300 bg-yellow-100 p-5 dark:border-yellow-600/30 dark:bg-yellow-900/20 md:p-6">
+        <div className="flex items-center justify-center w-12 h-12 bg-yellow-200 rounded-xl dark:bg-yellow-900/40">
+          <GroupIcon className="text-gray-800 size-6 dark:text-yellow-200" />
         </div>
 
         <div className="flex items-end justify-between mt-5">
           <div className="flex-1 min-w-0">
-            <span className="text-sm text-gray-500 dark:text-gray-400">
+            <span className="text-sm text-gray-600 dark:text-yellow-700/80 font-medium">
               Clients
             </span>
             <h4 className="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90 truncate">
               {clientsValue}
             </h4>
           </div>
-          <Badge color="success" className="ml-2 flex-shrink-0">
+          <Badge color="success" className="ml-2 flex-shrink-0 border border-green-300">
             <ArrowUpIcon />
             11.01%
           </Badge>
@@ -55,7 +55,7 @@ export default function EcommerceMetrics() {
       {/* <!-- Metric Item End --> */}
 
       {/* <!-- Metric Item Start --> */}
-      <div className="rounded-2xl border border-gray-300 bg-white p-5 dark:border-gray-700 dark:bg-white/[0.03] md:p-6">
+      <div className="rounded-2xl border border-neutral-400 bg-white p-5 dark:border-gray-700 dark:bg-white/[0.03] md:p-6">
         <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
           <BoxIconLine className="text-gray-800 size-6 dark:text-white/90" />
         </div>
@@ -68,7 +68,7 @@ export default function EcommerceMetrics() {
               {commandesValue}
             </h4>
           </div>
-          <Badge color="error" className="ml-2 flex-shrink-0">
+          <Badge color="error" className="ml-2 flex-shrink-0 border border-red-300">
             <ArrowDownIcon />
             9.05%
           </Badge>
@@ -77,7 +77,7 @@ export default function EcommerceMetrics() {
       {/* <!-- Metric Item End --> */}
 
       {/* <!-- Metric Item Start - Ventes --> */}
-      <div className="rounded-2xl border border-gray-300 bg-white p-5 dark:border-gray-700 dark:bg-white/[0.03] md:p-6">
+      <div className="rounded-2xl border border-neutral-400 bg-white p-5 dark:border-gray-700 dark:bg-white/[0.03] md:p-6">
         <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
           <DollarLineIcon className="text-gray-800 size-6 dark:text-white/90" />
         </div>
@@ -90,7 +90,7 @@ export default function EcommerceMetrics() {
               {ventesValue}
             </h4>
           </div>
-          <Badge color="success" className="ml-2 flex-shrink-0">
+          <Badge color="success" className="ml-2 flex-shrink-0 border border-green-300">
             <ArrowUpIcon />
             15.3%
           </Badge>

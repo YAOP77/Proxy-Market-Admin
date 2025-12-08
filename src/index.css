@@ -239,7 +239,7 @@ layer(base);
 }
 
 @utility menu-dropdown-item-active {
-  @apply bg-[#04b05d]/10 text-[#04b05d] dark:bg-[#04b05d]/12 dark:text-[#04b05d];
+  @apply bg-[#04b05d]/10 text-[#04b05d] border border-green-300 dark:bg-[#04b05d]/12 dark:text-[#04b05d] dark:border-green-600;
 }
 
 @utility menu-dropdown-item-inactive {

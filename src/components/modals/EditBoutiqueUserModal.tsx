@@ -55,7 +55,11 @@ const EditBoutiqueUserModal = ({
         const communesList = await adminService.getCommunes();
         setCommunes(communesList);
       } catch (err) {
-        console.error("Erreur lors du chargement des communes:", err);
+        // Logger uniquement le message d'erreur, pas l'objet complet
+        if (import.meta.env.DEV) {
+          const errorMessage = err instanceof Error ? err.message : "Erreur inconnue";
+          console.error("Erreur lors du chargement des communes:", errorMessage);
+        }
       } finally {
         setIsLoadingCommunes(false);
       }

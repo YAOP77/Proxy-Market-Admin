@@ -3,24 +3,43 @@
  * 
  * Ce composant :
  * - Vérifie si l'utilisateur est authentifié
- * - Redirige vers /signin si non authentifié
+ * - Vérifie si l'utilisateur a un rôle admin
+ * - Redirige vers /signin si non authentifié ou non autorisé
  * - Affiche un loader pendant la vérification
- * - Permet l'accès à la route si authentifié
+ * - Permet l'accès à la route si authentifié avec le bon rôle
  */
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 import { Navigate, useLocation } from "react-router";
 import { useAuth } from "../../context/AuthContext";
+
 interface ProtectedRouteProps {
   children: ReactNode;
 }
 
+// Rôles autorisés pour accéder à l'application
+const ALLOWED_ROLES = new Set(["admin", "super_admin"]);
+
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading, user, logout } = useAuth();
   const location = useLocation();
+  
+  // Utiliser useRef pour éviter les appels multiples à logout
+  const hasLoggedOut = useRef(false);
+
   const normalizedRole = user?.role?.toLowerCase().replace(/\s+/g, "_");
-  const allowedRoles = new Set(["admin", "super_admin"]);
-  const hasAdminRole = normalizedRole ? allowedRoles.has(normalizedRole) : false;
+  const hasAdminRole = normalizedRole ? ALLOWED_ROLES.has(normalizedRole) : false;
+
+  // Si l'utilisateur est authentifié mais n'a pas le bon rôle, le déconnecter
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && !hasAdminRole && !hasLoggedOut.current) {
+      hasLoggedOut.current = true;
+      // Déconnecter l'utilisateur de manière asynchrone
+      logout().catch(() => {
+        // Ignorer les erreurs de déconnexion
+      });
+    }
+  }, [isLoading, isAuthenticated, hasAdminRole, logout]);
 
   // Afficher un loader pendant la vérification de l'authentification
   if (isLoading) {
@@ -37,11 +56,12 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   // Rediriger vers /signin si non authentifié
-  // Sauvegarder la location actuelle pour rediriger après connexion
   if (!isAuthenticated) {
     return <Navigate to="/signin" state={{ from: location }} replace />;
   }
 
+  // Rediriger vers /signin avec raison "unauthorized" si pas le bon rôle
+  // La déconnexion sera effectuée par le useEffect ci-dessus
   if (!hasAdminRole) {
     return <Navigate to="/signin" state={{ from: location, reason: "unauthorized" }} replace />;
   }
@@ -49,4 +69,3 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   // Accès autorisé
   return <>{children}</>;
 }
-

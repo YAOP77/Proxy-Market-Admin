@@ -5,6 +5,7 @@
  * - Une image à gauche qui déborde légèrement
  * - Un message de bienvenue personnalisé avec le nom de l'utilisateur
  * - Une description sous le message principal
+ * - Une image de fond (administrador-solidario.jpg)
  */
 
 import { useEffect, useState, useMemo } from "react";
@@ -65,16 +66,7 @@ export default function WelcomeCard() {
 
   return (
     <div className="relative">
-      {/* Image sur mobile - déborde sur la gauche et vers le bas */}
-      <div className="sm:hidden absolute left-0 bottom-0 translate-y-8 -translate-x-6 w-80 h-auto z-10">
-        <img
-          src="/images/task/Olá - Relaxing.png"
-          alt="Bienvenue"
-          className="w-full h-auto object-contain"
-        />
-      </div>
-
-      {/* Image à gauche - déborde sur la gauche et vers le bas (desktop) */}
+      {/* Image à gauche - déborde sur la gauche et vers le bas (desktop uniquement, pas sur mobile) */}
       <div className="hidden sm:block absolute left-0 bottom-0 translate-y-4 md:translate-y-6 lg:translate-y-8 -translate-x-6 md:-translate-x-8 lg:-translate-x-10 w-48 sm:w-56 md:w-72 lg:w-80 xl:w-96 h-auto z-10">
         <img
           src="/images/task/Olá - Relaxing.png"
@@ -83,22 +75,32 @@ export default function WelcomeCard() {
         />
       </div>
 
-      {/* Card avec le contenu texte */}
-      <div className="rounded-2xl border border-[#04b05d]/20 bg-[#04b05d]/10 dark:border-[#04b05d]/30 dark:bg-[#04b05d]/5 overflow-hidden">
-        <div className="relative flex flex-col md:flex-row items-center min-h-[160px] sm:min-h-[140px] md:min-h-[160px] lg:min-h-[180px] xl:min-h-[200px] pl-48 sm:pl-40 md:pl-56 lg:pl-64 xl:pl-80 pr-4 sm:pr-6 md:pr-8 lg:pr-10 pt-4 pb-16 sm:py-4 md:py-5 lg:py-6">
-          {/* Contenu texte */}
+      {/* Card avec le contenu texte et image de fond */}
+      <div className="rounded-2xl border border-neutral-400 dark:border-[#04b05d]/30 overflow-hidden relative">
+        {/* Image de fond */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: "url('/images/task/administrador-solidario.jpg')"
+          }}
+        />
+        {/* Overlay très léger pour améliorer la lisibilité du texte sans masquer l'image */}
+        <div className="absolute inset-0 bg-gradient-to-r from-white/25 via-white/15 to-transparent dark:from-gray-900/30 dark:via-gray-900/20 dark:to-transparent" />
+        
+        {/* Contenu texte */}
+        <div className="relative flex flex-col md:flex-row items-center min-h-[160px] sm:min-h-[140px] md:min-h-[160px] lg:min-h-[180px] xl:min-h-[200px] pl-4 sm:pl-40 md:pl-56 lg:pl-64 xl:pl-80 pr-4 sm:pr-6 md:pr-8 lg:pr-10 pt-4 pb-20 sm:pb-16 md:py-5 lg:py-6 z-10">
           <div className="flex-1 flex flex-col justify-center w-full text-center sm:text-left">
-            <h2 className="text-4xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-5xl font-bold text-gray-800 dark:text-white/90 mb-1 sm:mb-1.5 leading-tight">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-5xl font-bold text-white dark:text-white/90 mb-1 sm:mb-1.5 leading-tight drop-shadow-lg">
               {userName ? (
                 <>
                   Bienvenue{" "}
-                  <span className="text-[#04b05d]">{userName}</span>
+                  <span className="text-green-600">{userName}</span>
                 </>
               ) : (
                 "Bienvenue"
               )}
             </h2>
-            <p className="text-sm sm:text-base md:text-sm lg:text-sm text-gray-600 dark:text-gray-300">
+            <p className="text-xs sm:text-sm md:text-sm lg:text-sm text-white dark:text-gray-200 font-medium drop-shadow-md">
               Vous avez la gestions totale des administrateurs, les franchisés, les clients,
               les commandes et et la possibilité de voir les statistiques de vente pour optimiser votre activité.
             </p>
@@ -108,4 +110,3 @@ export default function WelcomeCard() {
     </div>
   );
 }
-

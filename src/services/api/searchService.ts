@@ -381,7 +381,9 @@ const searchService = {
       }));
     } catch (error: unknown) {
       if (import.meta.env.DEV) {
-        console.error("Erreur lors de la recherche de boutiques (fallback):", error);
+        // Logger uniquement le message, pas l'objet complet pour éviter d'exposer des informations sensibles
+        const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
+        console.error("Erreur lors de la recherche de boutiques (fallback):", errorMessage);
       }
       return [];
     }
@@ -447,7 +449,9 @@ const searchService = {
       });
     } catch (error: unknown) {
       if (import.meta.env.DEV) {
-        console.error("Erreur lors de la recherche de franchisés:", error);
+        // Logger uniquement le message, pas l'objet complet pour éviter d'exposer des informations sensibles
+        const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
+        console.error("Erreur lors de la recherche de franchisés:", errorMessage);
       }
       return [];
     }
@@ -509,7 +513,9 @@ const searchService = {
       }));
     } catch (error: unknown) {
       if (import.meta.env.DEV) {
-        console.error("Erreur lors de la recherche d'admins:", error);
+        // Logger uniquement le message, pas l'objet complet pour éviter d'exposer des informations sensibles
+        const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
+        console.error("Erreur lors de la recherche d'admins:", errorMessage);
       }
       return [];
     }

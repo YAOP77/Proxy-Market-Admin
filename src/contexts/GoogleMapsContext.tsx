@@ -8,7 +8,7 @@
  * n'apparaissent dans la console du navigateur.
  */
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
 
 // Variable globale pour suivre si le script a déjà été chargé
 let isScriptLoading = false;
@@ -86,13 +86,22 @@ const loadGoogleMapsScript = (apiKey: string): Promise<void> => {
 export function GoogleMapsProvider({ children }: GoogleMapsProviderProps) {
   const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
   
+  // Utiliser useRef pour éviter les re-renders inutiles
+  const hasInitialized = useRef(false);
+  const isInitializing = useRef(false);
+  
   const [isLoaded, setIsLoaded] = useState(() => {
     // Vérifier immédiatement si l'API est déjà chargée
     if (typeof window !== "undefined" && window.google && window.google.maps) {
       isScriptLoaded = true;
+      hasInitialized.current = true;
       return true;
     }
-    return isScriptLoaded;
+    if (isScriptLoaded) {
+      hasInitialized.current = true;
+      return true;
+    }
+    return false;
   });
   
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -101,22 +110,26 @@ export function GoogleMapsProvider({ children }: GoogleMapsProviderProps) {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    // Utiliser une référence pour éviter les problèmes de closure
+    const isMountedRef = { current: true };
+
     // Intercepter uniquement les erreurs window.error liées à Google Maps
     const errorHandler = (event: ErrorEvent) => {
+      // Ne pas intercepter si le composant est démonté
+      if (!isMountedRef.current) return;
+
       const errorMessage = event.message || event.filename || '';
       const errorString = errorMessage.toString();
       
-      // Ignorer les erreurs "already defined" des éléments personnalisés Google Maps
-      // Ces erreurs se produisent lorsque les Web Components sont enregistrés plusieurs fois
-      // mais n'empêchent pas le fonctionnement de l'application
+      // Ignorer uniquement les erreurs spécifiques à Google Maps
+      // Ne pas intercepter les erreurs React Router ou autres erreurs critiques
       if (
-        errorString.includes("already defined") ||
-        errorString.includes("gmp-internal") ||
-        errorString.includes("gmp-map") ||
-        errorString.includes("Element with name") ||
+        (errorString.includes("already defined") && (errorString.includes("gmp") || errorString.includes("google"))) ||
+        (errorString.includes("gmp-internal") || errorString.includes("gmp-map")) ||
+        (errorString.includes("Element with name") && errorString.includes("gmp")) ||
         errorString.includes("google api is already presented") ||
-        errorString.includes("Cannot read properties of undefined") ||
-        (errorString.includes("reading") && (errorString.includes("DJ") || errorString.includes("ip") || errorString.includes("LN"))) ||
+        (errorString.includes("Cannot read properties of undefined") && (errorString.includes("DJ") || errorString.includes("ip") || errorString.includes("LN"))) ||
+        (errorString.includes("reading") && (errorString.includes("DJ") || errorString.includes("ip") || errorString.includes("LN")) && errorString.includes("google")) ||
         errorString.includes("BillingNotEnabledMapError") ||
         errorString.includes("BillingNotEnabled") ||
         errorString.includes("billing-not-enabled") ||
@@ -134,21 +147,21 @@ export function GoogleMapsProvider({ children }: GoogleMapsProviderProps) {
 
     // Intercepter également les rejets de promesses non gérés liés à Google Maps
     const unhandledRejectionHandler = (event: PromiseRejectionEvent) => {
+      // Ne pas intercepter si le composant est démonté
+      if (!isMountedRef.current) return;
+
       const errorMessage =
         (event.reason?.message || String(event.reason) || "").toString();
       
-      // Ignorer les erreurs liées à Google Maps
+      // Ignorer uniquement les erreurs spécifiques à Google Maps
       if (
-        errorMessage.includes("google api is already presented") ||
-        errorMessage.includes("already defined") ||
-        errorMessage.includes("gmp-internal") ||
-        errorMessage.includes("gmp-map") ||
-        errorMessage.includes("Cannot read properties of undefined") ||
-        errorMessage.includes("reading 'DJ'") ||
-        errorMessage.includes("reading 'ip'") ||
-        errorMessage.includes("reading 'LN'") ||
-        (errorMessage.includes("reading") && (errorMessage.includes("DJ") || errorMessage.includes("ip") || errorMessage.includes("LN"))) ||
-        (errorMessage.includes("TypeError") && (errorMessage.includes("DJ") || errorMessage.includes("ip") || errorMessage.includes("LN"))) ||
+        (errorMessage.includes("google api is already presented") || 
+         (errorMessage.includes("already defined") && errorMessage.includes("google"))) ||
+        (errorMessage.includes("gmp-internal") || errorMessage.includes("gmp-map")) ||
+        (errorMessage.includes("Cannot read properties of undefined") && (errorMessage.includes("DJ") || errorMessage.includes("ip") || errorMessage.includes("LN"))) ||
+        ((errorMessage.includes("reading 'DJ'") || errorMessage.includes("reading 'ip'") || errorMessage.includes("reading 'LN'")) && errorMessage.includes("google")) ||
+        (errorMessage.includes("reading") && (errorMessage.includes("DJ") || errorMessage.includes("ip") || errorMessage.includes("LN")) && errorMessage.includes("google")) ||
+        (errorMessage.includes("TypeError") && (errorMessage.includes("DJ") || errorMessage.includes("ip") || errorMessage.includes("LN")) && errorMessage.includes("google")) ||
         errorMessage.includes("BillingNotEnabledMapError") ||
         errorMessage.includes("BillingNotEnabled") ||
         errorMessage.includes("billing-not-enabled") ||
@@ -163,21 +176,28 @@ export function GoogleMapsProvider({ children }: GoogleMapsProviderProps) {
     window.addEventListener("unhandledrejection", unhandledRejectionHandler, true);
 
     // Intercepter également les erreurs via console.error (si possible)
+    // Utiliser une référence pour éviter les problèmes de closure
     const originalConsoleError = console.error;
-    console.error = (...args: unknown[]) => {
+    const consoleErrorWrapper = (...args: unknown[]) => {
+      // Ne pas intercepter si le composant est démonté
+      if (!isMountedRef.current) {
+        originalConsoleError.apply(console, args);
+        return;
+      }
+
       const errorString = args.map(arg => String(arg)).join(' ');
+      
+      // Ignorer uniquement les erreurs spécifiques à Google Maps
+      // Ne pas intercepter les erreurs React Router ou autres erreurs critiques
       if (
-        errorString.includes("already defined") ||
-        errorString.includes("gmp-internal") ||
-        errorString.includes("gmp-map") ||
-        errorString.includes("Element with name") ||
+        (errorString.includes("already defined") && (errorString.includes("gmp") || errorString.includes("google"))) ||
+        (errorString.includes("gmp-internal") || errorString.includes("gmp-map")) ||
+        (errorString.includes("Element with name") && errorString.includes("gmp")) ||
         errorString.includes("google api is already presented") ||
-        errorString.includes("Cannot read properties of undefined") ||
-        errorString.includes("reading 'DJ'") ||
-        errorString.includes("reading 'ip'") ||
-        errorString.includes("reading 'LN'") ||
-        (errorString.includes("reading") && (errorString.includes("DJ") || errorString.includes("ip") || errorString.includes("LN"))) ||
-        (errorString.includes("TypeError") && (errorString.includes("DJ") || errorString.includes("ip") || errorString.includes("LN"))) ||
+        (errorString.includes("Cannot read properties of undefined") && (errorString.includes("DJ") || errorString.includes("ip") || errorString.includes("LN"))) ||
+        ((errorString.includes("reading 'DJ'") || errorString.includes("reading 'ip'") || errorString.includes("reading 'LN'")) && errorString.includes("google")) ||
+        (errorString.includes("reading") && (errorString.includes("DJ") || errorString.includes("ip") || errorString.includes("LN")) && errorString.includes("google")) ||
+        (errorString.includes("TypeError") && (errorString.includes("DJ") || errorString.includes("ip") || errorString.includes("LN")) && errorString.includes("google")) ||
         errorString.includes("BillingNotEnabledMapError") ||
         errorString.includes("BillingNotEnabled") ||
         errorString.includes("billing-not-enabled") ||
@@ -189,23 +209,36 @@ export function GoogleMapsProvider({ children }: GoogleMapsProviderProps) {
       // Appeler la fonction originale pour les autres erreurs
       originalConsoleError.apply(console, args);
     };
+    
+    // Remplacer console.error uniquement si ce n'est pas déjà fait
+    if (console.error === originalConsoleError) {
+      console.error = consoleErrorWrapper;
+    }
 
     // Intercepter également les erreurs non gérées via window.onerror
     const originalOnError = window.onerror;
-    window.onerror = (message, source, lineno, colno, error) => {
+    const onErrorHandler = (message: string | Event | null, source?: string | null, lineno?: number | null, colno?: number | null, error?: Error | null) => {
+      // Ne pas intercepter si le composant est démonté
+      if (!isMountedRef.current) {
+        if (originalOnError) {
+          return originalOnError(message ?? "", source || undefined, lineno || undefined, colno || undefined, error || undefined);
+        }
+        return false;
+      }
+
       const errorString = String(message || error?.message || "");
+      
+      // Ignorer uniquement les erreurs spécifiques à Google Maps
+      // Ne pas intercepter les erreurs React Router ou autres erreurs critiques
       if (
-        errorString.includes("already defined") ||
-        errorString.includes("gmp-internal") ||
-        errorString.includes("gmp-map") ||
-        errorString.includes("Element with name") ||
+        (errorString.includes("already defined") && (errorString.includes("gmp") || errorString.includes("google"))) ||
+        (errorString.includes("gmp-internal") || errorString.includes("gmp-map")) ||
+        (errorString.includes("Element with name") && errorString.includes("gmp")) ||
         errorString.includes("google api is already presented") ||
-        errorString.includes("Cannot read properties of undefined") ||
-        errorString.includes("reading 'DJ'") ||
-        errorString.includes("reading 'ip'") ||
-        errorString.includes("reading 'LN'") ||
-        (errorString.includes("reading") && (errorString.includes("DJ") || errorString.includes("ip") || errorString.includes("LN"))) ||
-        (errorString.includes("TypeError") && (errorString.includes("DJ") || errorString.includes("ip") || errorString.includes("LN"))) ||
+        (errorString.includes("Cannot read properties of undefined") && (errorString.includes("DJ") || errorString.includes("ip") || errorString.includes("LN"))) ||
+        ((errorString.includes("reading 'DJ'") || errorString.includes("reading 'ip'") || errorString.includes("reading 'LN'")) && errorString.includes("google")) ||
+        (errorString.includes("reading") && (errorString.includes("DJ") || errorString.includes("ip") || errorString.includes("LN")) && errorString.includes("google")) ||
+        (errorString.includes("TypeError") && (errorString.includes("DJ") || errorString.includes("ip") || errorString.includes("LN")) && errorString.includes("google")) ||
         errorString.includes("BillingNotEnabledMapError") ||
         errorString.includes("BillingNotEnabled") ||
         errorString.includes("billing-not-enabled") ||
@@ -216,37 +249,63 @@ export function GoogleMapsProvider({ children }: GoogleMapsProviderProps) {
       }
       // Appeler le gestionnaire d'erreur original pour les autres erreurs
       if (originalOnError) {
-        return originalOnError(message, source, lineno, colno, error);
+        return originalOnError(message ?? "", source || undefined, lineno || undefined, colno || undefined, error || undefined);
       }
       return false;
     };
+    
+    window.onerror = onErrorHandler;
 
     return () => {
+      isMountedRef.current = false;
       window.removeEventListener("error", errorHandler, true);
       window.removeEventListener("unhandledrejection", unhandledRejectionHandler, true);
+      // Restaurer console.error uniquement si c'est notre wrapper
+      if (console.error === consoleErrorWrapper) {
       console.error = originalConsoleError;
+      }
+      // Restaurer window.onerror uniquement si c'est notre handler
+      if (window.onerror === onErrorHandler) {
       window.onerror = originalOnError;
+      }
     };
   }, []);
 
   // Charger le script Google Maps au montage du composant
   useEffect(() => {
-    // Si pas de clé API, ne rien faire
-    if (!googleMapsApiKey) {
-      setLoadError("Clé API Google Maps non configurée");
+    // Éviter les appels multiples
+    if (hasInitialized.current || isInitializing.current) {
       return;
     }
 
-    // Si déjà chargé, ne rien faire
+    // Si pas de clé API, ne rien faire
+    if (!googleMapsApiKey) {
+      setLoadError("Clé API Google Maps non configurée");
+      hasInitialized.current = true;
+      return;
+    }
+
+    // Vérifier si déjà chargé
+    if (typeof window !== "undefined" && window.google && window.google.maps) {
+      setIsLoaded(true);
+      setLoadError(null);
+      isScriptLoaded = true;
+      hasInitialized.current = true;
+      return;
+    }
+
+    // Si déjà chargé ou en cours de chargement, ne rien faire
     if (isScriptLoaded || isScriptLoading) {
       if (isScriptLoaded) {
         setIsLoaded(true);
         setLoadError(null);
+        hasInitialized.current = true;
       }
       return;
     }
 
-    // Marquer comme en cours de chargement
+    // Marquer comme en cours d'initialisation
+    isInitializing.current = true;
     isScriptLoading = true;
 
     // Charger le script
@@ -256,11 +315,17 @@ export function GoogleMapsProvider({ children }: GoogleMapsProviderProps) {
         setLoadError(null);
         isScriptLoaded = true;
         isScriptLoading = false;
+        hasInitialized.current = true;
+        isInitializing.current = false;
       })
       .catch((error) => {
-        console.error("Erreur lors du chargement de Google Maps:", error);
+        // Utiliser l'erreur originale pour éviter la boucle
+        const originalConsoleError = console.error;
+        originalConsoleError("Erreur lors du chargement de Google Maps:", error);
         setLoadError("Erreur de chargement");
         isScriptLoading = false;
+        hasInitialized.current = true;
+        isInitializing.current = false;
       });
   }, [googleMapsApiKey]);
 

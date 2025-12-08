@@ -169,6 +169,17 @@ export default function BoutiqueDetails() {
     }
   };
 
+  /**
+   * Redirige vers le formulaire de création de franchisé
+   * pour cette boutique (accès rapide en bas de page)
+   */
+  const handlePlaceFranchisee = () => {
+    if (!boutique || !boutique.id) {
+      return;
+    }
+    navigate(`/add-boutique-user?boutique_id=${boutique.id}`);
+  };
+
   const renderField = (label: string, value?: string | number | null) => (
     <div>
       <p className="mb-1.5 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{label}</p>
@@ -203,7 +214,15 @@ export default function BoutiqueDetails() {
             <div className="flex items-center gap-3">
               <span>{boutique ? boutique.name : "Boutique"}</span>
               {boutique && (
-                <Badge color={statusColor} size="sm">
+                <Badge 
+                  color={statusColor} 
+                  size="sm"
+                  className={
+                    statusColor === "success" 
+                      ? "border border-green-300 dark:border-green-600" 
+                      : ""
+                  }
+                >
                   {statusLabel}
                 </Badge>
               )}
@@ -249,22 +268,64 @@ export default function BoutiqueDetails() {
                 </div>
               </div>
 
+              {/* Informations principales */}
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {renderField("Nom de la boutique", boutique.name)}
                 {renderField("Email", boutique.email)}
-                {renderField(
-                  "Contact principal",
-                  boutique.contact_1 ? formatPhoneNumber(boutique.contact_1) : "—"
+                {boutique.contact_1 ? (
+                  <div>
+                    <p className="mb-1.5 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                      Contact principal
+                    </p>
+                    <div className="inline-block text-xs text-yellow-500 border border-yellow-300 bg-yellow-50 dark:border-yellow-600 dark:bg-yellow-900/20 rounded-full px-1.5 py-1">
+                      {formatPhoneNumber(boutique.contact_1)}
+                    </div>
+                  </div>
+                ) : (
+                  renderField("Contact principal", "—")
                 )}
-                {renderField(
-                  "Contact secondaire",
-                  boutique.contact_2 ? formatPhoneNumber(boutique.contact_2) : "—"
+                {boutique.contact_2 ? (
+                  <div>
+                    <p className="mb-1.5 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                      Contact secondaire
+                    </p>
+                    <div className="inline-block text-xs text-yellow-500 border border-yellow-300 bg-yellow-50 dark:border-yellow-600 dark:bg-yellow-900/20 rounded-full px-1.5 py-1">
+                      {formatPhoneNumber(boutique.contact_2)}
+                    </div>
+                  </div>
+                ) : (
+                  renderField("Contact secondaire", "—")
                 )}
                 {renderField("Adresse", boutique.adresse)}
                 {renderField("Commune", communeLabel)}
                 {renderField("Détails", boutique.details)}
+              </div>
+
+              {/* Suivi du compte */}
+              <div className="border-t pt-6 dark:border-gray-700">
+                <h4 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                  Suivi du compte
+                </h4>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <div>
+                    <p className="mb-1.5 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                      Statut
+                    </p>
+                    <Badge 
+                      color={statusColor} 
+                      size="sm"
+                      className={
+                        statusColor === "success" 
+                          ? "border border-green-300 dark:border-green-600" 
+                          : ""
+                      }
+                    >
+                      {statusLabel}
+                    </Badge>
+                  </div>
                 {renderField("Créé le", formatDate(boutique.created_at))}
                 {renderField("Mis à jour le", formatDate(boutique.updated_at))}
+                </div>
               </div>
             </div>
           ) : (
@@ -273,6 +334,20 @@ export default function BoutiqueDetails() {
             </p>
           )}
         </ComponentCard>
+
+        {/* Bouton d'accès rapide pour placer un franchisé à partir de cette boutique */}
+        {boutique && (
+          <div className="flex justify-end">
+            <Button
+              variant="none"
+              size="sm"
+              onClick={handlePlaceFranchisee}
+              className="bg-[#04b05d] hover:bg-[#039a52] text-white shadow-theme-xs disabled:bg-[#04b05d]/70 focus:ring-3 focus:ring-[#04b05d]/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Placer un franchisé pour cette boutique
+            </Button>
+          </div>
+        )}
       </div>
 
       <EditBoutiqueModal

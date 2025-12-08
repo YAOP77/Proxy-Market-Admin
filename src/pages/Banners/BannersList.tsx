@@ -1,5 +1,7 @@
 /**
- * Page ProductsTable - Liste des produits vivriers
+ * Page BannersList - Liste des bannieres
+ *
+ * Affiche la liste des bannieres avec pagination et recherche
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -15,24 +17,33 @@ import {
 } from "../../components/ui/table";
 
 import Badge from "../../components/ui/badge/Badge";
-import productService, { Product } from "../../services/api/productService";
+import bannerService, { Banner, Category } from "../../services/api/bannerService";
 import { PlusIcon } from "../../icons";
 import Button from "../../components/ui/button/Button";
 import Pagination from "../../components/ui/pagination/Pagination";
-import {
-  formatPrice,
-  formatWeight,
-  getCategoryName,
-  getProductImage,
-  getStatusLabel,
-  getStatusColor,
-} from "../../utils/productUtils";
 
-export default function ProductsTable() {
+/**
+ * Retourne le label du statut
+ */
+const getStatusLabel = (status: string | number): string => {
+  const statusStr = String(status);
+  return statusStr === "1" || statusStr === "1" ? "Actif" : "Inactif";
+};
+
+/**
+ * Retourne la couleur du badge selon le statut
+ */
+const getStatusColor = (status: string | number): "success" | "error" => {
+  const statusStr = String(status);
+  return statusStr === "1" ? "success" : "error";
+};
+
+export default function BannersList() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [products, setProducts] = useState<Product[]>([]);
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -45,112 +56,156 @@ export default function ProductsTable() {
     total: number;
   } | null>(null);
 
-  const loadProducts = async (page: number = 1) => {
+  const loadBanners = async (page: number = 1) => {
     try {
       setIsLoading(true);
       setError("");
-      const response = await productService.getProducts(page);
-      setProducts(response.data);
-      setPaginationMeta(response.meta);
-      setCurrentPage(response.meta.current_page);
+      const response = await bannerService.getBanners(page);
+      
+      // Verifier que la reponse contient bien data et meta
+      if (response && response.data && response.meta) {
+        setBanners(Array.isArray(response.data) ? response.data : []);
+        setPaginationMeta(response.meta);
+        setCurrentPage(response.meta.current_page || page);
+      } else {
+        // Si la structure n'est pas correcte, utiliser des valeurs par defaut
+        setBanners([]);
+        setPaginationMeta({
+          current_page: page,
+          from: 0,
+          last_page: 1,
+          per_page: 0,
+          to: 0,
+          total: 0,
+        });
+        setCurrentPage(page);
+      }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Erreur lors du chargement des produits";
+      const message = err instanceof Error ? err.message : "Erreur lors du chargement des bannieres";
       setError(message);
-      setProducts([]);
+      setBanners([]);
       setPaginationMeta(null);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Charger les categories au montage
   useEffect(() => {
-    loadProducts(1);
+    const loadCategories = async () => {
+      try {
+        const categoriesList = await bannerService.getCategories();
+        setCategories(categoriesList);
+      } catch (err: unknown) {
+        // En cas d'erreur, on continue sans categories
+        if (import.meta.env.DEV) {
+          console.error("[BannersList] Erreur chargement categories");
+        }
+      }
+    };
+
+    loadCategories();
+  }, []);
+
+  useEffect(() => {
+    loadBanners(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    loadProducts(page);
+    loadBanners(page);
     // Scroll vers le haut de la table
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  /**
+   * Recupere le nom de la categorie a partir de son ID
+   */
+  const getCategoryName = (categoryId: string): string => {
+    if (!categoryId) return "—";
+    const category = categories.find((cat) => cat.id === categoryId);
+    return category?.libelle || "—";
+  };
 
   const tableContent = useMemo(() => {
-    return products.map((product) => (
+    return banners.map((banner) => (
       <TableRow
-        key={product.id}
-        className="cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5"
-        onClick={() => navigate(`/products/${product.id}`)}
+        key={banner.id}
+        className="hover:bg-gray-50 dark:hover:bg-white/5"
       >
         <TableCell className="px-5 py-4 sm:px-6 text-start">
           <div className="flex items-center gap-3">
             <div className="w-16 h-16 overflow-hidden rounded-lg border border-gray-200 dark:border-white/10">
               <img
-                src={getProductImage(product)}
-                alt={product.libelle}
+                src={banner.photo || "/images/product/product-01.jpg"}
+                alt={banner.titre1}
                 className="h-full w-full object-cover"
                 onError={(e) => {
-                  // En cas d'erreur de chargement de l'image, utiliser une image par défaut
                   (e.target as HTMLImageElement).src = "/images/product/product-01.jpg";
                 }}
               />
             </div>
             <div>
               <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                {product.libelle}
+                {banner.titre1}
               </span>
-              <span className="block text-xs text-gray-500 dark:text-gray-400">
-                {formatWeight(product.valeur_poids, product.unite_poids)}
-              </span>
+              {banner.titre2 && (
+                <span className="block text-xs text-gray-500 dark:text-gray-400">
+                  {banner.titre2}
+                </span>
+              )}
             </div>
           </div>
         </TableCell>
         <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
           <Badge size="sm" color="warning" className="border border-orange-300 dark:border-orange-600">
-            {getCategoryName(product)}
+            {getCategoryName(banner.categorie_id)}
           </Badge>
-        </TableCell>
-        <TableCell className="px-4 py-3 text-gray-800 text-start text-theme-sm dark:text-white/90 font-medium">
-          {formatPrice(product.prix_vente_normale)}
-        </TableCell>
-        <TableCell className="px-4 py-3 text-gray-800 text-start text-theme-sm dark:text-white/90 font-medium">
-          {formatPrice(product.prix_vente_reduit)}
         </TableCell>
         <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-          <Badge 
-            size="sm" 
-            color={getStatusColor(product.status)}
-            className={
-              (typeof product.status === 'number' && product.status === 1) ||
-              (typeof product.status === 'string' && (product.status === "1" || String(product.status).toLowerCase().trim() === "actif"))
-                ? "border border-green-300 dark:border-green-600"
-                : ""
-            }
+          {banner.ordre}
+        </TableCell>
+        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+          <Badge
+            size="sm"
+            color={getStatusColor(banner.status)}
+            className={getStatusColor(banner.status) === "success" ? "border border-green-300 dark:border-green-600" : ""}
           >
-            {getStatusLabel(product)}
+            {getStatusLabel(banner.status)}
           </Badge>
+        </TableCell>
+        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+          {banner.created_at
+            ? new Date(banner.created_at).toLocaleDateString("fr-FR", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })
+            : "—"}
         </TableCell>
       </TableRow>
     ));
-  }, [products, navigate]);
+  }, [banners, categories]);
 
   if (isLoading) {
     return (
       <>
         <PageMeta
-          title="Liste des produits | Proxy Market"
-          description="Consultez la liste des produits vivriers enregistrés"
+          title="Liste des bannieres | Proxy Market"
+          description="Consultez la liste des bannieres Proxy Market"
         />
         <PageBreadcrumb
-          pageTitle="Liste des produits"
-          items={[{ label: "Gestion des produits", href: "/products-table" }]}
+          pageTitle="Liste des bannieres"
+          items={[
+            { label: "Gestion des produits", href: "/banners" },
+          ]}
           titleClassName="text-[#04b05d] dark:text-[#04b05d]"
         />
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-[#04b05d] border-t-transparent" />
-            <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">Chargement des produits...</p>
+            <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">Chargement des bannieres...</p>
           </div>
         </div>
       </>
@@ -161,12 +216,14 @@ export default function ProductsTable() {
     return (
       <>
         <PageMeta
-          title="Liste des produits | Proxy Market"
-          description="Consultez la liste des produits vivriers enregistrés"
+          title="Liste des bannieres | Proxy Market"
+          description="Consultez la liste des bannieres Proxy Market"
         />
         <PageBreadcrumb
-          pageTitle="Liste des produits"
-          items={[{ label: "Gestion des produits", href: "/products-table" }]}
+          pageTitle="Liste des bannieres"
+          items={[
+            { label: "Gestion des produits", href: "/banners" },
+          ]}
           titleClassName="text-[#04b05d] dark:text-[#04b05d]"
         />
         <div className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg dark:bg-red-900/20 dark:text-red-400 dark:border-red-800">
@@ -176,36 +233,38 @@ export default function ProductsTable() {
     );
   }
 
-  if (!isLoading && products.length === 0 && !error) {
+  if (!isLoading && banners.length === 0 && !error) {
     return (
       <>
         <PageMeta
-          title="Liste des produits | Proxy Market"
-          description="Consultez la liste des produits vivriers enregistrés"
+          title="Liste des bannieres | Proxy Market"
+          description="Consultez la liste des bannieres Proxy Market"
         />
         <PageBreadcrumb
-          pageTitle="Liste des produits"
-          items={[{ label: "Gestion des produits", href: "/products-table" }]}
+          pageTitle="Liste des bannieres"
+          items={[
+            { label: "Gestion des produits", href: "/banners" },
+          ]}
           titleClassName="text-[#04b05d] dark:text-[#04b05d]"
         />
         <div className="flex justify-end mb-6">
           <Button
             variant="none"
             className="bg-[#04b05d] hover:bg-[#039a52] text-white shadow-theme-xs disabled:bg-[#04b05d]/70 focus:ring-3 focus:ring-[#04b05d]/20 disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={() => navigate("/add-product")}
+            onClick={() => navigate("/add-banner")}
           >
             <PlusIcon className="w-4 h-4 mr-2" />
-            Ajouter un produit
+            Creer une banniere
           </Button>
         </div>
         <div className="flex flex-col items-center justify-center py-8">
           <img
             src="/images/oups/File searching-bro.png"
-            alt="Aucun produit trouvé"
+            alt="Aucune banniere trouvee"
             className="w-80 h-80 object-contain"
           />
           <p className="mt-4 text-center text-gray-500 dark:text-gray-400">
-            Aucun produit trouvé.
+            Aucune banniere trouvee.
           </p>
         </div>
       </>
@@ -215,12 +274,14 @@ export default function ProductsTable() {
   return (
     <>
       <PageMeta
-        title="Liste des produits | Proxy Market"
-        description="Consultez la liste des produits vivriers enregistrés"
+        title="Liste des bannieres | Proxy Market"
+        description="Consultez la liste des bannieres Proxy Market"
       />
       <PageBreadcrumb
-        pageTitle="Liste des produits"
-        items={[{ label: "Gestion des produits", href: "/products-table" }]}
+        pageTitle="Liste des bannieres"
+        items={[
+          { label: "Gestion des produits", href: "/banners" },
+        ]}
         titleClassName="text-[#04b05d] dark:text-[#04b05d]"
       />
 
@@ -228,10 +289,10 @@ export default function ProductsTable() {
         <Button
           variant="none"
           className="bg-[#04b05d] hover:bg-[#039a52] text-white shadow-theme-xs disabled:bg-[#04b05d]/70 focus:ring-3 focus:ring-[#04b05d]/20 disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={() => navigate("/add-product")}
+          onClick={() => navigate("/add-banner")}
         >
           <PlusIcon className="w-4 h-4 mr-2" />
-          Ajouter un produit
+          Creer une banniere
         </Button>
       </div>
 
@@ -241,23 +302,25 @@ export default function ProductsTable() {
             <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
               <TableRow>
                 <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                  Produit
+                  Banniere
                 </TableCell>
                 <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                  Catégorie
+                  Categorie
                 </TableCell>
                 <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                  Prix normal
-                </TableCell>
-                <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                  Prix réduit
+                  Ordre
                 </TableCell>
                 <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
                   Statut
                 </TableCell>
+                <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                  Date de creation
+                </TableCell>
               </TableRow>
             </TableHeader>
-            <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">{tableContent}</TableBody>
+            <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+              {tableContent}
+            </TableBody>
           </Table>
         </div>
 

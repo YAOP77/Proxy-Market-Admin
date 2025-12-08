@@ -370,7 +370,15 @@ const BoutiqueUserDetails = () => {
                   <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
                   <p className="text-base font-medium text-gray-800 dark:text-white/90">{boutiqueUser.email ?? "—"}</p>
                 </div>
-                <Badge color={getStatusColor(boutiqueUser.status)} size="sm">
+                <Badge 
+                  color={getStatusColor(boutiqueUser.status)} 
+                  size="sm"
+                  className={
+                    boutiqueUser.status === 1
+                      ? "border border-green-300 dark:border-green-600"
+                      : ""
+                  }
+                >
                   {getStatusLabel(boutiqueUser.status)}
                 </Badge>
               </div>
@@ -379,15 +387,73 @@ const BoutiqueUserDetails = () => {
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {renderField("Prénoms", boutiqueUser.prenoms)}
                 {renderField("Nom", boutiqueUser.nom)}
-                {renderField("Rôle", getRoleLabel(boutiqueUser.role))}
-                {renderField("Contact principal", boutiqueUser.contact_1 ? formatPhoneNumber(boutiqueUser.contact_1) : "—")}
-                {renderField("Contact secondaire", boutiqueUser.contact_2 ? formatPhoneNumber(boutiqueUser.contact_2) : "—")}
+                <div>
+                  <p className="mb-1.5 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                    Rôle
+                  </p>
+                  <Badge 
+                    size="sm" 
+                    color="warning"
+                    className="border border-orange-300 dark:border-orange-600"
+                  >
+                    {getRoleLabel(boutiqueUser.role)}
+                  </Badge>
+                </div>
+                {boutiqueUser.contact_1 ? (
+                  <div>
+                    <p className="mb-1.5 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                      Contact principal
+                    </p>
+                    <div className="inline-block text-xs text-yellow-500 border border-yellow-300 bg-yellow-50 dark:border-yellow-600 dark:bg-yellow-900/20 rounded-full px-1.5 py-1">
+                      {formatPhoneNumber(boutiqueUser.contact_1)}
+                    </div>
+                  </div>
+                ) : (
+                  renderField("Contact principal", "—")
+                )}
+                {boutiqueUser.contact_2 ? (
+                  <div>
+                    <p className="mb-1.5 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                      Contact secondaire
+                    </p>
+                    <div className="inline-block text-xs text-yellow-500 border border-yellow-300 bg-yellow-50 dark:border-yellow-600 dark:bg-yellow-900/20 rounded-full px-1.5 py-1">
+                      {formatPhoneNumber(boutiqueUser.contact_2)}
+                    </div>
+                  </div>
+                ) : (
+                  renderField("Contact secondaire", boutiqueUser.contact_2 ? formatPhoneNumber(boutiqueUser.contact_2) : "—")
+                )}
                 {renderField(
                   "Commune",
                   isLoadingCommune ? "Chargement..." : commune ? commune.libelle : "—"
                 )}
+              </div>
+
+              {/* Suivi du compte */}
+              <div className="border-t pt-6 dark:border-gray-700">
+                <h4 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                  Suivi du compte
+                </h4>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <div>
+                    <p className="mb-1.5 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                      Statut
+                    </p>
+                    <Badge 
+                      color={getStatusColor(boutiqueUser.status)} 
+                      size="sm"
+                      className={
+                        boutiqueUser.status === 1
+                          ? "border border-green-300 dark:border-green-600"
+                          : ""
+                      }
+                    >
+                      {getStatusLabel(boutiqueUser.status)}
+                    </Badge>
+                  </div>
                 {renderField("Créé le", formatDate(boutiqueUser.created_at))}
                 {renderField("Mis à jour le", formatDate(boutiqueUser.updated_at))}
+                </div>
               </div>
 
               {/* Section Boutique associée */}
@@ -405,8 +471,30 @@ const BoutiqueUserDetails = () => {
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                       {renderField("Nom de la boutique", boutique.name)}
                       {renderField("Adresse", boutique.adresse)}
-                      {renderField("Contact principal", boutique.contact_1 ? formatPhoneNumber(boutique.contact_1) : "—")}
-                      {renderField("Contact secondaire", boutique.contact_2 ? formatPhoneNumber(boutique.contact_2) : "—")}
+                      {boutique.contact_1 ? (
+                        <div>
+                          <p className="mb-1.5 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                            Contact principal
+                          </p>
+                          <div className="inline-block text-xs text-yellow-500 border border-yellow-300 bg-yellow-50 dark:border-yellow-600 dark:bg-yellow-900/20 rounded-full px-1.5 py-1">
+                            {formatPhoneNumber(boutique.contact_1)}
+                          </div>
+                        </div>
+                      ) : (
+                        renderField("Contact principal", "—")
+                      )}
+                      {boutique.contact_2 ? (
+                        <div>
+                          <p className="mb-1.5 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                            Contact secondaire
+                          </p>
+                          <div className="inline-block text-xs text-yellow-500 border border-yellow-300 bg-yellow-50 dark:border-yellow-600 dark:bg-yellow-900/20 rounded-full px-1.5 py-1">
+                            {formatPhoneNumber(boutique.contact_2)}
+                          </div>
+                        </div>
+                      ) : (
+                        renderField("Contact secondaire", boutique.contact_2 ? formatPhoneNumber(boutique.contact_2) : "—")
+                      )}
                       {renderField("Email", boutique.email)}
                     </div>
                     <div className="pt-4">
@@ -453,7 +541,15 @@ const BoutiqueUserDetails = () => {
                       {boutique.name || "—"}
                     </h3>
                     <div className="flex items-center gap-2">
-                      <Badge color={boutique.status === 1 ? "success" : "error"} size="sm">
+                      <Badge 
+                        color={boutique.status === 1 ? "success" : "error"} 
+                        size="sm"
+                        className={
+                          boutique.status === 1
+                            ? "border border-green-300 dark:border-green-600"
+                            : ""
+                        }
+                      >
                         {boutique.status === 1 ? "Actif" : "Inactif"}
                       </Badge>
                     </div>

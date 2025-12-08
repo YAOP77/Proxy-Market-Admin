@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import PageBreadcrumb from "../components/common/PageBreadCrumb";
 import PageMeta from "../components/common/PageMeta";
-import ComponentCard from "../components/common/ComponentCard";
 import Badge from "../components/ui/badge/Badge";
 import Button from "../components/ui/button/Button";
 import { Modal } from "../components/ui/modal";
@@ -408,31 +407,60 @@ export default function UserProfiles() {
       />
 
         <div className="space-y-6">
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+        {/* Carte principale du profil */}
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center gap-4 py-10">
+            <div className="flex flex-col items-center justify-center gap-4 py-12">
               <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#04b05d] border-t-transparent" />
               <p className="text-sm text-gray-500 dark:text-gray-400">Chargement des informations du profil…</p>
             </div>
           ) : (
+            <div className="p-6">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex flex-col items-center gap-4 text-center lg:flex-row lg:text-left">
-                <div className="h-24 w-24 overflow-hidden rounded-full border border-gray-200 dark:border-gray-700">
+                  <div className="relative">
+                    <div className="h-28 w-28 overflow-hidden rounded-full border-4 border-gray-200 dark:border-white/10 shadow-lg ring-4 ring-white dark:ring-gray-800">
                   <img
                     src={profileImage}
                     alt={fullName}
                     className="h-full w-full object-cover"
-                  />
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          if (target.src !== "/images/user/User.jpg") {
+                            target.src = "/images/user/User.jpg";
+                          }
+                        }}
+                      />
+                    </div>
+                    {statusColor === "success" && (
+                      <div className="absolute bottom-0 right-0 h-6 w-6 rounded-full border-4 border-white bg-green-500 dark:border-gray-800"></div>
+                    )}
                 </div>
                 <div className="space-y-2">
                   <div className="flex flex-col items-center gap-2 lg:flex-row lg:items-center lg:gap-3">
-                    <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">{fullName}</h2>
-                    <Badge color={statusColor} size="sm">
+                      <h2 className="text-2xl font-bold text-gray-800 dark:text-white/90">{fullName}</h2>
+                      <Badge 
+                        color={statusColor} 
+                        size="sm"
+                        className={
+                          statusColor === "success" 
+                            ? "border border-green-300 dark:border-green-600" 
+                            : ""
+                        }
+                      >
                       {accountStatus}
                     </Badge>
                   </div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">{user?.email ?? "—"}</p>
-                  <p className="text-sm font-medium text-[#04b05d]">{roleLabel}</p>
+                    <div className="flex items-center justify-center gap-2 lg:justify-start">
+                      <Badge 
+                        size="sm" 
+                        color="warning"
+                        className="border border-orange-300 dark:border-orange-600"
+                      >
+                        {roleLabel}
+                      </Badge>
+                    </div>
                 </div>
               </div>
 
@@ -445,30 +473,75 @@ export default function UserProfiles() {
                 >
                   Modifier mon profil
                 </Button>
+                </div>
               </div>
             </div>
           )}
         </div>
 
         {!isLoading && error && (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-200">
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
             {error}
           </div>
         )}
 
-        <ComponentCard title="Informations personnelles">
+        {/* Informations personnelles */}
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+          <div className="border-b border-gray-100 bg-gray-50 px-6 py-4 dark:border-white/[0.05] dark:bg-white/[0.02]">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">Informations personnelles</h3>
+          </div>
+          <div className="p-6">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {renderField("Prénoms", adminDetails?.prenoms)}
             {renderField("Nom", adminDetails?.nom)}
             {renderField("Adresse e-mail", user?.email)}
-            {renderField("Rôle", roleLabel)}
+              <div>
+                <p className="mb-1.5 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                  Rôle
+                </p>
+                <Badge 
+                  size="sm" 
+                  color="warning"
+                  className="border border-orange-300 dark:border-orange-600"
+                >
+                  {roleLabel}
+                </Badge>
+              </div>
+            </div>
           </div>
-        </ComponentCard>
+        </div>
 
-        <ComponentCard title="Coordonnées & localisation">
+        {/* Coordonnées & localisation */}
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+          <div className="border-b border-gray-100 bg-gray-50 px-6 py-4 dark:border-white/[0.05] dark:bg-white/[0.02]">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">Coordonnées & localisation</h3>
+          </div>
+          <div className="p-6">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {renderField("Contact principal", adminDetails?.contact_1 ? formatPhoneNumber(adminDetails.contact_1) : undefined)}
-            {renderField("Contact secondaire", adminDetails?.contact_2 ? formatPhoneNumber(adminDetails.contact_2) : undefined)}
+              {adminDetails?.contact_1 ? (
+                <div>
+                  <p className="mb-1.5 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                    Contact principal
+                  </p>
+                  <div className="inline-block text-xs text-yellow-500 border border-yellow-300 bg-yellow-50 dark:border-yellow-600 dark:bg-yellow-900/20 rounded-full px-1.5 py-1">
+                    {formatPhoneNumber(adminDetails.contact_1)}
+                  </div>
+                </div>
+              ) : (
+                renderField("Contact principal", undefined)
+              )}
+              {adminDetails?.contact_2 ? (
+                <div>
+                  <p className="mb-1.5 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                    Contact secondaire
+                  </p>
+                  <div className="inline-block text-xs text-yellow-500 border border-yellow-300 bg-yellow-50 dark:border-yellow-600 dark:bg-yellow-900/20 rounded-full px-1.5 py-1">
+                    {formatPhoneNumber(adminDetails.contact_2)}
+                  </div>
+                </div>
+              ) : (
+                renderField("Contact secondaire", adminDetails?.contact_2 ? formatPhoneNumber(adminDetails.contact_2) : undefined)
+              )}
             {renderField("Commune", (() => {
               if (!adminDetails?.commune_id) {
                 return "—";
@@ -479,15 +552,37 @@ export default function UserProfiles() {
             })())}
             {renderField("Adresse", adminDetails?.adresse)}
           </div>
-        </ComponentCard>
+          </div>
+        </div>
 
-        <ComponentCard title="Suivi du compte">
+        {/* Suivi du compte */}
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+          <div className="border-b border-gray-100 bg-gray-50 px-6 py-4 dark:border-white/[0.05] dark:bg-white/[0.02]">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">Suivi du compte</h3>
+          </div>
+          <div className="p-6">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {renderField("Statut", accountStatus)}
+              <div>
+                <p className="mb-1.5 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                  Statut
+                </p>
+                <Badge 
+                  color={statusColor} 
+                  size="sm"
+                  className={
+                    statusColor === "success" 
+                      ? "border border-green-300 dark:border-green-600" 
+                      : ""
+                  }
+                >
+                  {accountStatus}
+                </Badge>
+              </div>
             {renderField("Créé le", formatDate(adminDetails?.created_at))}
             {renderField("Mis à jour le", formatDate(adminDetails?.updated_at))}
+            </div>
           </div>
-        </ComponentCard>
+        </div>
       </div>
 
       <Modal isOpen={isEditModalOpen} onClose={handleCloseEditModal} className="max-w-3xl">

@@ -198,8 +198,74 @@ export const authService = {
         if (!apiBaseUrl) {
           throw new Error("Configuration API manquante. Veuillez contacter l'administrateur.");
         }
+        
+        const errorMessage = error.message || "";
+        
+        // Détecter les erreurs CORS en premier (priorité)
+        const isCORSError = 
+          errorMessage.includes("CORS") ||
+          errorMessage.includes("cors") ||
+          errorMessage.includes("preflight") ||
+          errorMessage.includes("Access-Control") ||
+          errorMessage.includes("blocked") ||
+          errorMessage.includes("origin") ||
+          errorMessage.includes("Redirect is not allowed");
+        
+        // Détecter les erreurs SSL/TLS
+        const isSSLError = 
+          errorMessage.includes("ERR_CERT") ||
+          errorMessage.includes("CERT") ||
+          errorMessage.includes("SSL") ||
+          errorMessage.includes("TLS") ||
+          errorMessage.includes("certificate") ||
+          errorMessage.includes("common name");
+        
+        if (isCORSError) {
+          const corsErrorMsg = import.meta.env.PROD
+            ? "Erreur CORS: Le serveur API bloque les requêtes depuis cette origine. Cela peut être dû à une redirection HTTP vers HTTPS lors de la requête preflight. Veuillez contacter l'administrateur du serveur pour corriger la configuration CORS."
+            : "Erreur CORS: Le serveur redirige probablement HTTP vers HTTPS lors de la requête preflight. Vérifiez que VITE_API_BASE_URL utilise HTTPS (pas HTTP) dans votre fichier .env.";
+          throw new Error(corsErrorMsg);
+        } else if (isSSLError) {
+          const sslErrorMsg = import.meta.env.PROD
+            ? "Erreur de certificat SSL: Le certificat du serveur API est invalide. Cela fonctionnait peut-être en local car vous aviez accepté une exception de sécurité, mais en production (HTTPS), le navigateur bloque automatiquement les certificats invalides. Veuillez contacter l'administrateur du serveur pour corriger le certificat SSL."
+            : "Erreur de certificat SSL: Le certificat du serveur ne correspond pas au domaine. Veuillez contacter l'administrateur pour corriger le certificat SSL.";
+          throw new Error(sslErrorMsg);
+        }
+        
         throw new Error("Impossible de contacter le serveur. Vérifiez votre connexion internet.");
       } else {
+        // Détecter les erreurs CORS et SSL dans le message d'erreur
+        const errorMessage = error.message || "";
+        
+        const isCORSError = 
+          errorMessage.includes("CORS") ||
+          errorMessage.includes("cors") ||
+          errorMessage.includes("preflight") ||
+          errorMessage.includes("Access-Control") ||
+          errorMessage.includes("blocked") ||
+          errorMessage.includes("origin") ||
+          errorMessage.includes("Redirect is not allowed");
+        
+        const isSSLError = 
+          errorMessage.includes("ERR_CERT") ||
+          errorMessage.includes("CERT") ||
+          errorMessage.includes("SSL") ||
+          errorMessage.includes("TLS") ||
+          errorMessage.includes("certificate") ||
+          errorMessage.includes("common name");
+        
+        if (isCORSError) {
+          const corsErrorMsg = import.meta.env.PROD
+            ? "Erreur CORS: Le serveur API bloque les requêtes depuis cette origine. Cela peut être dû à une redirection HTTP vers HTTPS lors de la requête preflight. Veuillez contacter l'administrateur du serveur pour corriger la configuration CORS."
+            : "Erreur CORS: Le serveur redirige probablement HTTP vers HTTPS lors de la requête preflight. Vérifiez que VITE_API_BASE_URL utilise HTTPS (pas HTTP) dans votre fichier .env.";
+          throw new Error(corsErrorMsg);
+        } else if (isSSLError) {
+          const sslErrorMsg = import.meta.env.PROD
+            ? "Erreur de certificat SSL: Le certificat du serveur API est invalide. Cela fonctionnait peut-être en local car vous aviez accepté une exception de sécurité, mais en production (HTTPS), le navigateur bloque automatiquement les certificats invalides. Veuillez contacter l'administrateur du serveur pour corriger le certificat SSL."
+            : "Erreur de certificat SSL: Le certificat du serveur ne correspond pas au domaine. Veuillez contacter l'administrateur pour corriger le certificat SSL.";
+          throw new Error(sslErrorMsg);
+        }
+        
         throw new Error(error.message || "Une erreur est survenue lors de la connexion");
       }
     }

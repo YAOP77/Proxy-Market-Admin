@@ -109,6 +109,12 @@ export default function BoutiqueUsersTable({ users, boutiqueId }: BoutiqueUsersT
                 src={getUserImage(user.id)}
                 alt={getFullName(user)}
                 className="h-full w-full object-cover"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (target.src !== "/images/user/User.jpg") {
+                    target.src = "/images/user/User.jpg";
+                  }
+                }}
               />
             </div>
             <div>
@@ -122,20 +128,30 @@ export default function BoutiqueUsersTable({ users, boutiqueId }: BoutiqueUsersT
           </div>
         </TableCell>
         <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-          {user.contact_1 ? formatPhoneNumber(user.contact_1) : "—"}
+          {user.contact_1 ? (
+            <div className="inline-block text-xs text-yellow-500 border border-yellow-300 bg-yellow-50 dark:border-yellow-600 dark:bg-yellow-900/20 rounded-full px-1.5 py-1">
+              {formatPhoneNumber(user.contact_1)}
           {user.contact_2 && (
-            <span className="block text-xs text-gray-400 dark:text-gray-500">
+                <span className="block text-xs text-gray-600 dark:text-yellow-200/80">
               {formatPhoneNumber(user.contact_2)}
             </span>
+              )}
+            </div>
+          ) : (
+            "—"
           )}
         </TableCell>
         <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-          <Badge size="sm" color="warning">
+          <Badge size="sm" color="warning" className="border border-orange-300">
             {getRoleLabel(user.role)}
           </Badge>
         </TableCell>
         <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-          <Badge size="sm" color={getStatusColor(user.status)}>
+          <Badge 
+            size="sm" 
+            color={getStatusColor(user.status)}
+            className={user.status === 1 ? "border border-green-300 dark:border-green-600" : ""}
+          >
             {getStatusLabel(user.status)}
           </Badge>
         </TableCell>

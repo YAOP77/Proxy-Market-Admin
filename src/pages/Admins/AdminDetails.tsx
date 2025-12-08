@@ -114,6 +114,16 @@ export default function AdminDetails() {
     return "warning";
   }, [admin]);
 
+  const getRoleLabel = (role: string): string => {
+    const roleLabels: Record<string, string> = {
+      admin: "Administrateur",
+      super_admin: "Super Administrateur",
+      caissier: "Caissier",
+      commercial: "Commercial",
+    };
+    return roleLabels[role] || role;
+  };
+
   const formatDate = (dateValue?: string) => {
     if (!dateValue) {
       return "—";
@@ -212,21 +222,88 @@ export default function AdminDetails() {
                   <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
                   <p className="text-base font-medium text-gray-800 dark:text-white/90">{admin.email ?? "—"}</p>
                 </div>
-                <Badge color={statusColor} size="sm">
+                <Badge 
+                  color={statusColor} 
+                  size="sm"
+                  className={
+                    statusColor === "success" 
+                      ? "border border-green-300 dark:border-green-600" 
+                      : ""
+                  }
+                >
                   {statusLabel}
                 </Badge>
               </div>
 
+              {/* Informations principales */}
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {renderField("Prénoms", admin.prenoms)}
                 {renderField("Nom", admin.nom)}
-                {renderField("Rôle", admin.role)}
-                {renderField("Contact principal", admin.contact_1 ? formatPhoneNumber(admin.contact_1) : "—")}
-                {renderField("Contact secondaire", admin.contact_2 ? formatPhoneNumber(admin.contact_2) : "—")}
+                <div>
+                  <p className="mb-1.5 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                    Rôle
+                  </p>
+                  <Badge 
+                    size="sm" 
+                    color="warning"
+                    className="border border-orange-300 dark:border-orange-600"
+                  >
+                    {getRoleLabel(admin.role)}
+                  </Badge>
+                </div>
+                {admin.contact_1 ? (
+                  <div>
+                    <p className="mb-1.5 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                      Contact principal
+                    </p>
+                    <div className="inline-block text-xs text-yellow-500 border border-yellow-300 bg-yellow-50 dark:border-yellow-600 dark:bg-yellow-900/20 rounded-full px-1.5 py-1">
+                      {formatPhoneNumber(admin.contact_1)}
+                    </div>
+                  </div>
+                ) : (
+                  renderField("Contact principal", "—")
+                )}
+                {admin.contact_2 ? (
+                  <div>
+                    <p className="mb-1.5 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                      Contact secondaire
+                    </p>
+                    <div className="inline-block text-xs text-yellow-500 border border-yellow-300 bg-yellow-50 dark:border-yellow-600 dark:bg-yellow-900/20 rounded-full px-1.5 py-1">
+                      {formatPhoneNumber(admin.contact_2)}
+                    </div>
+                  </div>
+                ) : (
+                  renderField("Contact secondaire", "—")
+                )}
                 {renderField("Commune", communeLabel)}
                 {renderField("Adresse", admin.adresse)}
+              </div>
+
+              {/* Suivi du compte */}
+              <div className="border-t pt-6 dark:border-gray-700">
+                <h4 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                  Suivi du compte
+                </h4>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <div>
+                    <p className="mb-1.5 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                      Statut
+                    </p>
+                    <Badge 
+                      color={statusColor} 
+                      size="sm"
+                      className={
+                        statusColor === "success" 
+                          ? "border border-green-300 dark:border-green-600" 
+                          : ""
+                      }
+                    >
+                      {statusLabel}
+                    </Badge>
+                  </div>
                 {renderField("Créé le", formatDate(admin.created_at))}
                 {renderField("Mis à jour le", formatDate(admin.updated_at))}
+                </div>
               </div>
             </div>
           ) : (

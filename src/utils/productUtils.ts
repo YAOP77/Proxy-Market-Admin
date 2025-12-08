@@ -261,15 +261,6 @@ export const getProductImages = (product: Product): string[] => {
 
       if (imageUrl) {
         images.push({ url: imageUrl, isPrimary });
-        
-        if (import.meta.env.DEV) {
-          console.log("[getProductImages] Image ajoutée (all_photos):", {
-            url: imageUrl.substring(0, 50) + "...",
-            isPrimary,
-            isPrimaryValue,
-            type: typeof isPrimaryValue,
-          });
-        }
       }
     });
   }
@@ -328,23 +319,6 @@ export const getProductImages = (product: Product): string[] => {
     // Déplacer l'image principale en première position
     const [primaryImage] = sortedImages.splice(primaryIndex, 1);
     sortedImages.unshift(primaryImage);
-    
-    if (import.meta.env.DEV) {
-      console.log("[getProductImages] Image principale déplacée de l'index", primaryIndex, "vers 0");
-    }
-  } else if (primaryIndex === -1 && sortedImages.length > 0) {
-    // Aucune image principale trouvée, la première image sera considérée comme principale
-    if (import.meta.env.DEV) {
-      console.log("[getProductImages] Aucune image principale trouvée, utilisation de la première image");
-    }
-  }
-
-  if (import.meta.env.DEV && sortedImages.length > 0) {
-    console.log("[getProductImages] Images triées (ordre final):", sortedImages.map((img, idx) => ({
-      index: idx,
-      url: img.url.substring(0, 50) + "...",
-      isPrimary: img.isPrimary,
-    })));
   }
 
   // Retourner uniquement les URLs

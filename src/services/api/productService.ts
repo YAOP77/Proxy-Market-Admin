@@ -599,31 +599,22 @@ const productService = {
           formData.append(`existing_photos[${index}][id]`, String(photo.id));
           formData.append(`existing_photos[${index}][is_primary]`, String(photo.is_primary));
           
-          if (import.meta.env.DEV) {
-            console.log(`[productService.updateProduct] existing_photos[${index}]:`, {
-              id: photo.id,
-              is_primary: photo.is_primary,
-            });
-          }
+          // Ne pas logger les données sensibles même en développement
         });
       }
 
+      // Ne pas logger le payload complet pour éviter d'exposer des données sensibles
+      // Seulement logger un résumé en développement si nécessaire
       if (import.meta.env.DEV) {
-        const debugPayload: Record<string, unknown> = {};
-        const fileSummary: Record<string, number> = {};
-
-        formData.forEach((value, key) => {
+        let fileCount = 0;
+        formData.forEach((value) => {
           if (value instanceof File) {
-            fileSummary[key] = (fileSummary[key] || 0) + 1;
-          } else {
-            debugPayload[key] = value;
+            fileCount++;
           }
         });
-
-        console.log("[productService.updateProduct] Payload envoyé:", {
-          ...debugPayload,
-          files: fileSummary,
-        });
+        if (fileCount > 0) {
+          console.log("[productService.updateProduct] Envoi avec", fileCount, "fichier(s)");
+        }
       }
 
       formData.append("_method", "PUT");
@@ -634,8 +625,9 @@ const productService = {
         },
       });
 
+      // Ne pas logger la réponse complète pour éviter d'exposer des données sensibles
       if (import.meta.env.DEV) {
-        console.log("[productService.updateProduct] Réponse API:", response.data);
+        console.log("[productService.updateProduct] Modification réussie");
       }
 
       // Vérifier le statut HTTP pour confirmer la modification réussie

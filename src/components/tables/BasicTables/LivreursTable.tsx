@@ -1,12 +1,11 @@
 /**
- * Composant UsersTable - Tableau des utilisateurs (clients)
- * 
- * Affiche la liste des utilisateurs avec :
- * - User (photo + nom + email)
+ * Composant LivreursTable - Tableau des livreurs
+ *
+ * Affiche la liste des livreurs avec :
+ * - Livreur (photo + nom + email)
  * - Contact
- * - Rôle
+ * - Localisation
  * - Statut
- * - Nombre d'achats
  */
 
 import { useMemo } from "react";
@@ -21,74 +20,20 @@ import {
 
 import Badge from "../../ui/badge/Badge";
 
-interface User {
+interface Livreur {
   id: number | string;
   name: string;
   email?: string;
   image: string;
   contact?: string;
+  location?: string;
   role: string;
   status: string;
-  purchaseCount: number;
 }
 
-interface UsersTableProps {
-  users?: User[];
+interface LivreursTableProps {
+  livreurs?: Livreur[];
 }
-
-// Données d'exemple pour le tableau des utilisateurs
-const defaultUsersData: User[] = [
-  {
-    id: 1,
-    name: "Marc Frankin",
-    email: "marc.frankin@email.com",
-    image: "/images/user/user-01.jpg",
-    contact: "+225 07 89 45 32 10",
-    role: "Client",
-    status: "Actif",
-    purchaseCount: 10,
-  },
-  {
-    id: 2,
-    name: "Anne Loren",
-    email: "anne.loren@email.com",
-    image: "/images/user/user-02.jpg",
-    contact: "+225 05 67 23 45 89",
-    role: "Client",
-    status: "En attente",
-    purchaseCount: 2,
-  },
-  {
-    id: 3,
-    name: "Thomas Muller",
-    email: "thomas.muller@email.com",
-    image: "/images/user/user-03.jpg",
-    contact: "+225 01 23 45 67 89",
-    role: "Client",
-    status: "Actif",
-    purchaseCount: 15,
-  },
-  {
-    id: 4,
-    name: "Sarah Johnson",
-    email: "sarah.johnson@email.com",
-    image: "/images/user/user-04.jpg",
-    contact: "+225 07 12 34 56 78",
-    role: "Client",
-    status: "Actif",
-    purchaseCount: 7,
-  },
-  {
-    id: 5,
-    name: "David Brown",
-    email: "david.brown@email.com",
-    image: "/images/user/user-05.jpg",
-    contact: "+225 09 87 65 43 21",
-    role: "Client",
-    status: "Inactif",
-    purchaseCount: 0,
-  },
-];
 
 /**
  * Retourne la couleur du badge selon le statut
@@ -109,21 +54,21 @@ const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
   }
 };
 
-export default function UsersTable({ users = defaultUsersData }: UsersTableProps) {
+export default function LivreursTable({ livreurs = [] }: LivreursTableProps) {
   const navigate = useNavigate();
 
   const tableContent = useMemo(() => {
-    return users.map((user) => (
+    return livreurs.map((livreur) => (
       <TableRow
-        key={user.id}
+        key={livreur.id}
         className="cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5"
-        onClick={() => navigate(`/users/${user.id}`)}
+        onClick={() => navigate(`/livreurs/${livreur.id}`)}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            navigate(`/users/${user.id}`);
+            navigate(`/livreurs/${livreur.id}`);
           }
         }}
       >
@@ -133,53 +78,57 @@ export default function UsersTable({ users = defaultUsersData }: UsersTableProps
               <img
                 width={40}
                 height={40}
-                src={user.image}
-                alt={user.name}
+                src={livreur.image}
+                alt={livreur.name}
                 className="h-full w-full object-cover"
                 onError={handleImageError}
               />
             </div>
             <div>
               <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                {user.name}
+                {livreur.name}
               </span>
-              {user.email && (
+              {livreur.email && (
                 <span className="block text-xs text-gray-500 dark:text-gray-400">
-                  {user.email}
+                  {livreur.email}
                 </span>
               )}
             </div>
           </div>
         </TableCell>
         <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-          {user.contact ? (
+          {livreur.contact ? (
             <div className="inline-block text-xs text-yellow-500 border border-yellow-300 bg-yellow-50 dark:border-yellow-600 dark:bg-yellow-900/20 rounded-full px-1.5 py-1">
-              {user.contact}
+              {livreur.contact}
             </div>
           ) : (
             "—"
           )}
         </TableCell>
         <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+          {livreur.location ? (
+            <span className="text-gray-800 dark:text-white/90">{livreur.location}</span>
+          ) : (
+            "—"
+          )}
+        </TableCell>
+        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
           <Badge size="sm" color="warning" className="border border-orange-300 dark:border-orange-600">
-            {user.role}
+            {livreur.role}
           </Badge>
         </TableCell>
         <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
           <Badge
             size="sm"
-            color={getStatusColor(user.status)}
-            className={user.status === "Actif" ? "border border-green-300 dark:border-green-600" : ""}
+            color={getStatusColor(livreur.status)}
+            className={livreur.status === "Actif" ? "border border-green-300 dark:border-green-600" : ""}
           >
-            {user.status}
+            {livreur.status}
           </Badge>
-        </TableCell>
-        <TableCell className="px-4 py-3 text-gray-800 text-center text-theme-sm dark:text-white/90 font-medium">
-          {user.purchaseCount}
         </TableCell>
       </TableRow>
     ));
-  }, [users, navigate]);
+  }, [livreurs, navigate]);
 
   return (
     <div className="max-w-full overflow-x-auto">
@@ -191,13 +140,19 @@ export default function UsersTable({ users = defaultUsersData }: UsersTableProps
               isHeader
               className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
             >
-              Utilisateur
+              Livreur
             </TableCell>
             <TableCell
               isHeader
               className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
             >
               Contact
+            </TableCell>
+            <TableCell
+              isHeader
+              className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+            >
+              Localisation
             </TableCell>
             <TableCell
               isHeader
@@ -211,12 +166,6 @@ export default function UsersTable({ users = defaultUsersData }: UsersTableProps
             >
               Statut
             </TableCell>
-            <TableCell
-              isHeader
-              className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400"
-            >
-              Nombre d'achats
-            </TableCell>
           </TableRow>
         </TableHeader>
 
@@ -228,3 +177,4 @@ export default function UsersTable({ users = defaultUsersData }: UsersTableProps
     </div>
   );
 }
+

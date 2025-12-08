@@ -78,8 +78,9 @@ export default function BoutiqueUsersTablePage() {
         setBoutiquesError(errorMessage);
         setBoutiques([]);
         
+        // Logger uniquement le message d'erreur, pas l'objet complet
         if (import.meta.env.DEV) {
-          console.error("Erreur lors du chargement des boutiques:", err);
+          console.error("Erreur lors du chargement des boutiques:", errorMessage);
         }
       } finally {
         setIsLoadingBoutiques(false);

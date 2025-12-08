@@ -626,7 +626,7 @@ export default function EditProductModal({
           : undefined;
 
       if (import.meta.env.DEV && existingPhotosPayload) {
-        console.log("[EditProductModal] Photos existantes à envoyer (triées):", existingPhotosPayload);
+        console.log("[EditProductModal] Nombre de photos existantes à envoyer:", existingPhotosPayload.length);
       }
 
       // Préparer les données
@@ -645,17 +645,15 @@ export default function EditProductModal({
       };
 
       if (import.meta.env.DEV) {
-        const { photos: payloadPhotos, ...restPayload } = productData;
-        console.log("[EditProductModal] Payload envoyé:", {
-          ...restPayload,
-          photosCount: payloadPhotos?.length ?? 0,
-        });
+        // Ne pas logger les données complètes du produit pour éviter d'exposer des informations
+        console.log("[EditProductModal] Envoi de la modification avec", productData.photos?.length ?? 0, "nouvelle(s) photo(s)");
       }
 
       const result = await productService.updateProduct(targetProductId, productData);
 
       if (import.meta.env.DEV) {
-        console.log("[EditProductModal] Réponse API:", result);
+        // Ne pas logger la réponse API complète pour éviter d'exposer des informations sensibles
+        console.log("[EditProductModal] Modification réussie:", result.success);
       }
 
       // Vérifier que la modification a vraiment réussi

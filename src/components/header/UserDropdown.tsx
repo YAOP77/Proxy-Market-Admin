@@ -29,6 +29,20 @@ export default function UserDropdown() {
     };
   }, [user]);
 
+  // Image de l'utilisateur avec fallback vers User.jpg par défaut
+  const userImage = useMemo(() => {
+    return userData?.image || userData?.avatar || userData?.photo || "/images/user/User.jpg";
+  }, [userData]);
+
+  // Gestion de l'erreur de chargement d'image
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const target = e.currentTarget;
+    // Si l'image par défaut échoue aussi, on garde User.jpg
+    if (target.src !== "/images/user/User.jpg") {
+      target.src = "/images/user/User.jpg";
+    }
+  };
+
   function toggleDropdown() {
     setIsOpen(!isOpen);
   }
@@ -60,7 +74,12 @@ export default function UserDropdown() {
         className="flex items-center text-gray-700 dropdown-toggle dark:text-gray-400"
       >
         <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
-          <img src="/images/user/owner.jpg" alt="User" />
+          <img 
+            src={userImage} 
+            alt="User" 
+            onError={handleImageError}
+            className="w-full h-full object-cover"
+          />
         </span>
 
         <span className="block mr-1 font-semibold text-sm text-[#04b05d] dark:text-[#04b05d]">

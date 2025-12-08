@@ -47,6 +47,7 @@ export const mainNavItems: NavItem[] = [
       { name: "Créer une boutique", path: "/add-franchise" },
       { name: "Créer un administrateur", path: "/add-admin" },
       { name: "Publier un produit", path: "/add-product" },
+      { name: "Créer une bannière", path: "/add-banner" },
     ],
   },
   {
@@ -56,6 +57,7 @@ export const mainNavItems: NavItem[] = [
       { name: "Voir toutes les boutiques", path: "/basic-tables" },
       { name: "Voir tous les franchisés", path: "/boutique-users-table" },
       { name: "Voir tous les clients", path: "/users-table" },
+      { name: "Voir tous les livreurs", path: "/livreurs-table" },
       { name: "Voir tous les administrateurs", path: "/admins-table" },
     ],
   },
@@ -66,6 +68,7 @@ export const mainNavItems: NavItem[] = [
       { name: "Voir tous les produits", path: "/products-table" },
       { name: "Voir toutes les commandes", path: "/orders" },
       { name: "Voir toutes les ventes", path: "/sales-table" },
+      { name: "Voir toutes les bannières", path: "/banners" },
     ],
   },
   // Masqué - Gardé pour référence (page 404 utilisée)

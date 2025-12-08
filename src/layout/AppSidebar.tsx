@@ -51,6 +51,19 @@ const AppSidebar: React.FC = () => {
   );
 
   /**
+   * Vérifie si un élément parent a un enfant actif
+   * @param nav - L'élément de navigation parent
+   * @returns true si un des enfants est actif
+   */
+  const hasActiveChild = useCallback(
+    (nav: NavItem): boolean => {
+      if (!nav.subItems) return false;
+      return nav.subItems.some((subItem) => isActive(subItem.path));
+    },
+    [isActive]
+  );
+
+  /**
    * Détection automatique du sous-menu à ouvrir selon la route active
    * S'exécute à chaque changement de location
    */
@@ -123,9 +136,13 @@ const AppSidebar: React.FC = () => {
    * @param items - Liste des items à afficher
    * @param menuType - Type de menu ("main" ou "others")
    */
-  const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => (
+  const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => {
+    return (
     <ul className="flex flex-col gap-4">
-      {items.map((nav, index) => (
+        {items.map((nav, index) => {
+          const isParentActive = nav.subItems ? hasActiveChild(nav) : false;
+          
+          return (
         <li key={nav.name}>
           {/* Item avec sous-menu */}
           {nav.subItems ? (
@@ -136,6 +153,8 @@ const AppSidebar: React.FC = () => {
                   ? "menu-item-active"
                   : "menu-item-inactive"
               } cursor-pointer ${
+                    isParentActive ? "border border-green-300 dark:border-green-600 rounded-lg" : ""
+                  } ${
                 !isExpanded && !isHovered
                   ? "lg:justify-center"
                   : "lg:justify-start"
@@ -236,9 +255,11 @@ const AppSidebar: React.FC = () => {
             </div>
           )}
         </li>
-      ))}
+          );
+        })}
     </ul>
   );
+  };
 
   return (
     <aside

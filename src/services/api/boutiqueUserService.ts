@@ -148,7 +148,10 @@ const boutiqueUserService = {
       
       // Structure non reconnue
       if (import.meta.env.DEV) {
-        console.warn("getBoutiqueUserDetails: Structure de réponse non reconnue", response.data);
+        // Ne pas logger response.data pour éviter d'exposer des informations sensibles
+        if (import.meta.env.DEV) {
+          console.warn("getBoutiqueUserDetails: Structure de réponse non reconnue");
+        }
       }
       throw new Error("Format de réponse inattendu");
     } catch (error: unknown) {
@@ -450,7 +453,10 @@ const boutiqueUserService = {
       
       // Retourner un tableau vide si la structure n'est pas reconnue
       if (import.meta.env.DEV) {
-        console.warn("getBoutiqueUsers: Structure de réponse non reconnue", response.data);
+        // Ne pas logger response.data pour éviter d'exposer des informations sensibles
+        if (import.meta.env.DEV) {
+          console.warn("getBoutiqueUsers: Structure de réponse non reconnue");
+        }
       }
       return { data: [] };
     } catch (error: unknown) {
@@ -482,10 +488,8 @@ const boutiqueUserService = {
         
         // Autres erreurs HTTP : logger en mode développement
         if (import.meta.env.DEV) {
-          console.error("getBoutiqueUsers: Erreur lors de la récupération", {
-            status,
-            message: apiError?.message || apiError?.error,
-          });
+          // Ne logger que le statut, pas les détails de l'erreur pour éviter d'exposer des informations sensibles
+          console.error("getBoutiqueUsers: Erreur lors de la récupération (statut:", status + ")");
         }
         
         // Retourner un tableau vide pour ne pas bloquer l'affichage
@@ -500,7 +504,8 @@ const boutiqueUserService = {
         // Autre type d'erreur
         if (error instanceof Error) {
           if (import.meta.env.DEV) {
-            console.error("getBoutiqueUsers: Erreur inattendue", error);
+            // Logger uniquement le message, pas l'objet complet
+            console.error("getBoutiqueUsers: Erreur inattendue:", error.message);
           }
           // Propager l'erreur si c'est une erreur d'authentification
           if (error.message.includes("authentifié") || error.message.includes("authentification")) {

@@ -32,12 +32,15 @@ import BoutiqueUserDetails from "./pages/Franchises/BoutiqueUserDetails";
 import AddAdmin from "./pages/Admins/AddAdmin";
 import AddProduct from "./pages/Products/AddProduct";
 import ProductDetails from "./pages/Products/ProductDetails";
+import AddBanner from "./pages/Banners/AddBanner";
+import BannersList from "./pages/Banners/BannersList";
 import BasicTables from "./pages/Tables/BasicTables";
 import UsersTablePage from "./pages/Tables/UsersTable";
 import AdminsTablePage from "./pages/Tables/AdminsTable";
 import BoutiqueUsersTablePage from "./pages/Tables/BoutiqueUsersTable";
 import ProductsTablePage from "./pages/Tables/ProductsTable";
 import SalesTablePage from "./pages/Tables/SalesTable";
+import LivreursTablePage from "./pages/Tables/LivreursTable";
 import AdminDetails from "./pages/Admins/AdminDetails";
 import OrdersList from "./pages/Orders/OrdersList";
 import OrderDetails from "./pages/Orders/OrderDetails";
@@ -107,6 +110,7 @@ export default function App() {
             <Route path="/add-boutique-user" element={<AddBoutiqueUser />} />
             <Route path="/add-admin" element={<AddAdmin />} />
             <Route path="/add-product" element={<AddProduct />} />
+            <Route path="/add-banner" element={<AddBanner />} />
 
             {/* Tableaux */}
             <Route path="/basic-tables" element={<BasicTables />} />
@@ -116,6 +120,7 @@ export default function App() {
             <Route path="/admins/:adminId" element={<AdminDetails />} />
             <Route path="/boutique-users-table" element={<BoutiqueUsersTablePage />} />
             <Route path="/boutique-user/:id" element={<BoutiqueUserDetails />} />
+            <Route path="/livreurs-table" element={<LivreursTablePage />} />
 
             {/* Produits */}
             <Route path="/products-table" element={<ProductsTablePage />} />
@@ -125,6 +130,9 @@ export default function App() {
             {/* Commandes */}
             <Route path="/orders" element={<OrdersList />} />
             <Route path="/order/:orderId" element={<OrderDetails />} />
+
+            {/* Bannieres */}
+            <Route path="/banners" element={<BannersList />} />
 
             {/* Recherche */}
             <Route path="/search" element={<SearchResults />} />

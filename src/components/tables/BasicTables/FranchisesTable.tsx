@@ -69,18 +69,24 @@ export default function FranchisesTable({ boutiques, onAddFranchise }: Franchise
           </div>
         </TableCell>
         <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-          {boutique.contact_1}
-          {boutique.contact_2 && (
-            <span className="block text-xs text-gray-400 dark:text-gray-500">
-              {boutique.contact_2}
-            </span>
-          )}
+          <div className="inline-block text-xs text-yellow-500 border border-yellow-300 bg-yellow-50 dark:border-yellow-600 dark:bg-yellow-900/20 rounded-full px-1.5 py-1">
+            {boutique.contact_1}
+            {boutique.contact_2 && (
+              <span className="block text-xs text-gray-600 dark:text-yellow-200/80">
+                {boutique.contact_2}
+              </span>
+            )}
+          </div>
         </TableCell>
         <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
           {boutique.adresse}
         </TableCell>
         <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-          <Badge size="sm" color={getStatusColor(boutique.status)}>
+          <Badge 
+            size="sm" 
+            color={getStatusColor(boutique.status)}
+            className={boutique.status === 1 ? "border border-green-300 dark:border-green-600" : ""}
+          >
             {getStatusLabel(boutique.status)}
           </Badge>
         </TableCell>
@@ -88,8 +94,8 @@ export default function FranchisesTable({ boutiques, onAddFranchise }: Franchise
           <TableCell className="px-4 py-3 text-center">
             <button
               type="button"
-              onClick={() => onAddFranchise?.(boutique, {} as React.MouseEvent)}
-              className="inline-flex items-center justify-center gap-2 rounded-lg transition px-3 py-2 text-sm bg-[#04b05d] hover:bg-[#039a52] text-white shadow-theme-xs disabled:bg-[#04b05d]/70 focus:ring-3 focus:ring-[#04b05d]/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={(e) => onAddFranchise?.(boutique, e)}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-100 border border-neutral-300 transition px-1.5 py-1 text-sm hover:bg-neutral-600 hover:text-white text-neutral-600 shadow-theme-xs disabled:bg-[#04b05d]/70 focus:ring-3 focus:ring-[#04b05d]/20 disabled:opacity-50 disabled:cursor-not-allowed"
               title="Placer un franchisé"
             >
               Placer un franchisé
