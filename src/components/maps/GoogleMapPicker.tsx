@@ -259,6 +259,22 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
     }
   }, []);
 
+  // Si l'API est disponible mais que isMapLoaded est false après un délai, forcer l'affichage
+  useEffect(() => {
+    if (isLoaded && isApiAvailable && !isMapLoaded) {
+      const timeout = setTimeout(() => {
+        if (!isMapLoaded && window.google?.maps) {
+          if (import.meta.env.DEV) {
+            console.log('[GoogleMapPicker] Forcing map display after timeout');
+          }
+          setIsMapLoaded(true);
+        }
+      }, 3000); // Attendre 3 secondes avant de forcer
+
+      return () => clearTimeout(timeout);
+    }
+  }, [isLoaded, isApiAvailable, isMapLoaded]);
+
 
   // Vérifier périodiquement l'état de l'API même après le chargement
   useEffect(() => {
@@ -395,8 +411,24 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
   }, [isApiAvailable, currentLoadError]);
 
 
-  const isLoading = !isLoaded || !isMapLoaded;
+  // Afficher la carte si l'API est chargée et disponible, même si onLoad n'a pas encore été appelé
+  const canDisplayMap = isLoaded && isApiAvailable;
+  const isLoading = !canDisplayMap || (!isMapLoaded && !currentLoadError);
   const shouldShowError = currentLoadError && (!isMapLoaded || !isApiAvailable);
+  
+  // Log pour le débogage
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log('[GoogleMapPicker] State:', {
+        isLoaded,
+        isApiAvailable,
+        isMapLoaded,
+        canDisplayMap,
+        currentLoadError,
+        isLoading
+      });
+    }
+  }, [isLoaded, isApiAvailable, isMapLoaded, canDisplayMap, currentLoadError, isLoading]);
 
   return (
     <div className={`relative rounded-lg border border-gray-300 overflow-hidden dark:border-gray-700 ${className}`}>
@@ -408,7 +440,7 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
           </div>
         </div>
       )}
-      {isLoaded && isApiAvailable && isMapLoaded ? (
+      {canDisplayMap ? (
         <GoogleMap
           mapContainerStyle={containerStyle}
           center={defaultCenter}
