@@ -90,6 +90,7 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
         ]
       };
     } else if (currentLoadError === "RefererNotAllowed") {
+      const currentOrigin = typeof window !== "undefined" ? window.location.origin : "";
       return {
         title: "🔒 Restriction de référent",
         message: "Les restrictions de la clé API bloquent l'accès depuis cette origine.",
@@ -102,8 +103,11 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
           "6. Ajoutez ces référents :",
           "   - http://localhost:5173/*",
           "   - http://127.0.0.1:5173/*",
+          currentOrigin ? `   - ${currentOrigin}/*` : "",
+          currentOrigin ? `   - ${currentOrigin.replace(/^https?/, 'https')}/*` : "",
           "7. Cliquez sur 'Save'",
-          "8. Rechargez cette page"
+          "8. Attendez quelques minutes pour que les changements prennent effet",
+          "9. Rechargez cette page"
         ]
       };
     } else if (currentLoadError === "InvalidKey") {
@@ -116,15 +120,50 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
           "3. Redémarrez le serveur de développement après avoir modifié le .env"
         ]
       };
-    } else {
+    } else if (currentLoadError === "NetworkError") {
+      return {
+        title: "🌐 Erreur réseau",
+        message: "Impossible de charger Google Maps. Vérifiez votre connexion internet.",
+        instructions: [
+          "Vérifiez votre connexion internet",
+          "Si vous êtes en production, assurez-vous que :",
+          "  - La clé API est correctement configurée dans les variables d'environnement du serveur",
+          "  - Les restrictions de domaine incluent votre domaine de production",
+          "  - Le domaine utilise HTTPS (requis pour Google Maps en production)",
+          "Essayez de recharger la page"
+        ]
+      };
+    } else if (currentLoadError === "LoadError") {
+      const currentOrigin = typeof window !== "undefined" ? window.location.origin : "";
       return {
         title: "⚠️ Erreur de chargement de Google Maps",
         message: "Une erreur est survenue lors du chargement de Google Maps.",
         instructions: [
-          "Vérifiez que votre clé API est valide et correctement configurée dans le fichier .env",
+          "Vérifiez que votre clé API est valide et correctement configurée",
+          "En production, la clé API doit être définie dans les variables d'environnement du serveur",
           "La facturation est activée sur votre compte Google Cloud (requis même pour les quotas gratuits)",
           "L'API 'Maps JavaScript API' est activée dans Google Cloud Console",
-          "Les restrictions de clé API permettent l'accès depuis localhost (http://localhost:5173)",
+          "Les restrictions de clé API permettent l'accès depuis :",
+          "  - http://localhost:5173/* (développement)",
+          currentOrigin ? `  - ${currentOrigin}/* (production)` : "",
+          "Le domaine utilise HTTPS en production (requis par Google Maps)",
+          "Consultez la console du navigateur (F12) pour plus de détails sur l'erreur"
+        ]
+      };
+    } else {
+      const currentOrigin = typeof window !== "undefined" ? window.location.origin : "";
+      return {
+        title: "⚠️ Erreur de chargement de Google Maps",
+        message: "Une erreur est survenue lors du chargement de Google Maps.",
+        instructions: [
+          "Vérifiez que votre clé API est valide et correctement configurée",
+          "En production, la clé API doit être définie dans les variables d'environnement du serveur",
+          "La facturation est activée sur votre compte Google Cloud (requis même pour les quotas gratuits)",
+          "L'API 'Maps JavaScript API' est activée dans Google Cloud Console",
+          "Les restrictions de clé API permettent l'accès depuis :",
+          "  - http://localhost:5173/* (développement)",
+          currentOrigin ? `  - ${currentOrigin}/* (production)` : "",
+          "Le domaine utilise HTTPS en production (requis par Google Maps)",
           "Consultez la console du navigateur (F12) pour plus de détails sur l'erreur"
         ]
       };
@@ -214,12 +253,30 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
     setIsMapLoaded(false);
   }, []);
 
-  // Détecter les erreurs Google Maps critiques (uniquement si l'API n'est pas disponible)
+  // Détecter les erreurs Google Maps critiques et vérifier périodiquement si l'API est disponible
   useEffect(() => {
-    // Ne pas écouter les erreurs si l'API est déjà chargée
+    // Si l'API est déjà disponible, ne rien faire
     if (isApiAvailable) {
+      setLoadError(null);
       return;
     }
+
+    // Vérifier périodiquement si l'API devient disponible
+    const checkInterval = setInterval(() => {
+      if (typeof window !== "undefined" && window.google && window.google.maps) {
+        setLoadError(null);
+        clearInterval(checkInterval);
+      }
+    }, 500);
+
+    // Timeout après 30 secondes
+    const timeoutId = setTimeout(() => {
+      clearInterval(checkInterval);
+      if (!isApiAvailable && !currentLoadError) {
+        // Si après 30 secondes l'API n'est toujours pas disponible, définir une erreur générique
+        setLoadError("LoadError");
+      }
+    }, 30000);
 
     // Écouter uniquement les erreurs critiques Google Maps (pas les "already defined")
     const errorHandler = (event: ErrorEvent) => {
@@ -231,15 +288,19 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
         return;
       }
       
-      // Détecter les erreurs critiques
-      if (errorString.includes('BillingNotEnabledMapError')) {
-        setLoadError("BillingNotEnabled");
-      } else if (errorString.includes('ApiNotActivatedMapError')) {
-        setLoadError("ApiNotActivated");
-      } else if (errorString.includes('RefererNotAllowedMapError')) {
-        setLoadError("RefererNotAllowed");
-      } else if (errorString.includes('InvalidKeyMapError')) {
-        setLoadError("InvalidKey");
+      // Détecter les erreurs critiques Google Maps
+      if (errorString.includes('maps.googleapis.com') || errorString.includes('Google Maps')) {
+        if (errorString.includes('BillingNotEnabled') || errorString.includes('billing')) {
+          setLoadError("BillingNotEnabled");
+        } else if (errorString.includes('ApiNotActivated') || errorString.includes('API not enabled')) {
+          setLoadError("ApiNotActivated");
+        } else if (errorString.includes('RefererNotAllowed') || errorString.includes('referer')) {
+          setLoadError("RefererNotAllowed");
+        } else if (errorString.includes('InvalidKey') || errorString.includes('invalid key')) {
+          setLoadError("InvalidKey");
+        } else if (!currentLoadError) {
+          setLoadError("LoadError");
+        }
       }
     };
 
@@ -251,15 +312,19 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
         return;
       }
       
-      // Détecter les erreurs critiques
-      if (errorMessage.includes('BillingNotEnabledMapError')) {
-        setLoadError("BillingNotEnabled");
-      } else if (errorMessage.includes('ApiNotActivatedMapError')) {
-        setLoadError("ApiNotActivated");
-      } else if (errorMessage.includes('RefererNotAllowedMapError')) {
-        setLoadError("RefererNotAllowed");
-      } else if (errorMessage.includes('InvalidKeyMapError')) {
-        setLoadError("InvalidKey");
+      // Détecter les erreurs critiques Google Maps
+      if (errorMessage.includes('maps.googleapis.com') || errorMessage.includes('Google Maps')) {
+        if (errorMessage.includes('BillingNotEnabled') || errorMessage.includes('billing')) {
+          setLoadError("BillingNotEnabled");
+        } else if (errorMessage.includes('ApiNotActivated') || errorMessage.includes('API not enabled')) {
+          setLoadError("ApiNotActivated");
+        } else if (errorMessage.includes('RefererNotAllowed') || errorMessage.includes('referer')) {
+          setLoadError("RefererNotAllowed");
+        } else if (errorMessage.includes('InvalidKey') || errorMessage.includes('invalid key')) {
+          setLoadError("InvalidKey");
+        } else if (!currentLoadError) {
+          setLoadError("LoadError");
+        }
       }
     };
 
@@ -268,10 +333,12 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
     window.addEventListener('unhandledrejection', unhandledRejectionHandler);
 
     return () => {
+      clearInterval(checkInterval);
+      clearTimeout(timeoutId);
       window.removeEventListener('error', errorHandler);
       window.removeEventListener('unhandledrejection', unhandledRejectionHandler);
     };
-  }, [isApiAvailable]);
+  }, [isApiAvailable, currentLoadError]);
 
 
   const isLoading = !isLoaded || !isMapLoaded;

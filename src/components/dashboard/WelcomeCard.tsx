@@ -76,7 +76,7 @@ export default function WelcomeCard() {
       </div>
 
       {/* Card avec le contenu texte et image de fond */}
-      <div className="rounded-2xl border border-neutral-400 dark:border-[#04b05d]/30 overflow-hidden relative">
+      <div className="rounded-2xl border border-neutral-300 dark:border-neutral-400 overflow-hidden relative">
         {/* Image de fond */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"

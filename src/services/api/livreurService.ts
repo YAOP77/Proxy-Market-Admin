@@ -137,8 +137,68 @@ async function getLivreurs(page: number = 1, search?: string): Promise<Normalize
   }
 }
 
+/**
+ * Récupère les détails d'un livreur par son ID
+ * @param livreurId - ID du livreur
+ * @returns Promise avec les données du livreur
+ */
+async function getLivreurById(livreurId: string): Promise<Livreur> {
+  try {
+    const response = await apiClient.get<Livreur | { data: Livreur } | { livreur: Livreur } | string>(
+      `/livreurs/${livreurId}`
+    );
+
+    // Vérifier si la réponse est une chaîne d'erreur
+    if (typeof response.data === "string") {
+      const responseString: string = response.data;
+      const lowerResponse = responseString.toLowerCase();
+      if (
+        lowerResponse.includes("connecté") ||
+        lowerResponse.includes("connecte") ||
+        lowerResponse.includes("authentification") ||
+        lowerResponse.includes("unauthorized")
+      ) {
+        throw new Error("Non authentifié. Veuillez vous reconnecter.");
+      }
+      throw new Error("Réponse inattendue de l'API");
+    }
+
+    // Vérifier que response.data existe
+    if (!response.data || typeof response.data !== "object") {
+      throw new Error("Structure de réponse inattendue de l'API");
+    }
+
+    // Gérer les différents formats de réponse
+    const responseData = response.data as Livreur | { data: Livreur } | { livreur: Livreur };
+
+    // Si la réponse est wrappée dans { data: ... }
+    if ("data" in responseData && responseData.data && typeof responseData.data === "object") {
+      return responseData.data as Livreur;
+    }
+
+    // Si la réponse est wrappée dans { livreur: ... }
+    if ("livreur" in responseData && responseData.livreur && typeof responseData.livreur === "object") {
+      return responseData.livreur as Livreur;
+    }
+
+    // Sinon, retourner directement
+    return responseData as Livreur;
+  } catch (error: unknown) {
+    if (import.meta.env.DEV) {
+      console.error("[LivreurService] Erreur lors de la récupération des détails du livreur");
+    }
+
+    if (error instanceof Error) {
+      throw new Error(error.message || "Erreur lors de la récupération des détails du livreur");
+    }
+
+    throw new Error("Erreur lors de la récupération des détails du livreur");
+  }
+}
+
 const livreurService = {
   getLivreurs,
+  getLivreurById,
 };
 
 export default livreurService;

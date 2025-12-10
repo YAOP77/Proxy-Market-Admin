@@ -38,45 +38,219 @@ const loadGoogleMapsScript = (apiKey: string): Promise<void> => {
     }
 
     // Vérifier si un script est déjà en cours de chargement
-    const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+    const existingScript = document.querySelector('script[src*="maps.googleapis.com"]') as HTMLScriptElement | null;
     if (existingScript) {
-      // Attendre que le script existant se charge
-      existingScript.addEventListener('load', () => resolve());
-      existingScript.addEventListener('error', () => reject(new Error('Failed to load')));
-      return;
-    }
-
-    // Créer et insérer le script
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async`;
-    script.async = true;
-    script.defer = true;
-    
-    script.onload = () => {
-      // Attendre que l'objet google.maps soit disponible
-      const checkInterval = setInterval(() => {
-        if (window.google && window.google.maps) {
-          clearInterval(checkInterval);
+      // Si l'API est déjà disponible, résoudre immédiatement
+      if (window.google && window.google.maps) {
+        resolve();
+        return;
+      }
+      
+      // Attendre que le script existant se charge (avec timeout)
+      let resolved = false;
+      const checkExisting = setInterval(() => {
+        if (window.google && window.google.maps && !resolved) {
+          clearInterval(checkExisting);
+          resolved = true;
           resolve();
         }
       }, 100);
       
-      // Timeout après 10 secondes
+      // Timeout pour le script existant (20 secondes)
+      const timeoutId = setTimeout(() => {
+        clearInterval(checkExisting);
+        if (!resolved) {
+          resolved = true;
+          // Si après 20 secondes le script n'est toujours pas chargé, rejeter
+          // Le retry logic dans le contexte gérera la nouvelle tentative
+          reject(new Error('Existing script timeout'));
+        }
+      }, 20000);
+      
+      // Si le script existant se charge avec succès
+      existingScript.addEventListener('load', () => {
+        const checkAfterLoad = setInterval(() => {
+          if (window.google && window.google.maps && !resolved) {
+            clearInterval(checkAfterLoad);
+            clearInterval(checkExisting);
+            clearTimeout(timeoutId);
+            resolved = true;
+            resolve();
+          }
+        }, 100);
+        
+        setTimeout(() => {
+          clearInterval(checkAfterLoad);
+          clearInterval(checkExisting);
+          clearTimeout(timeoutId);
+          if (window.google && window.google.maps && !resolved) {
+            resolved = true;
+            resolve();
+          } else if (!resolved) {
+            resolved = true;
+            reject(new Error('Script loaded but API not available'));
+          }
+        }, 10000);
+      }, { once: true });
+      
+      // Si le script existant a une erreur
+      existingScript.addEventListener('error', () => {
+        clearInterval(checkExisting);
+        clearTimeout(timeoutId);
+        if (!resolved) {
+          resolved = true;
+          existingScript.remove();
+          reject(new Error('Failed to load existing script'));
+        }
+      }, { once: true });
+      
+      return;
+    }
+
+    // Créer une fonction de callback globale pour gérer les erreurs Google Maps
+    const callbackName = `initGoogleMaps_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    let callbackExecuted = false;
+    let scriptRemoved = false;
+    
+    // Définir le callback global
+    (window as any)[callbackName] = () => {
+      callbackExecuted = true;
+      // Attendre que l'objet google.maps soit disponible
+      const checkInterval = setInterval(() => {
+        if (window.google && window.google.maps) {
+          clearInterval(checkInterval);
+          if ((window as any)[callbackName]) {
+            delete (window as any)[callbackName];
+          }
+          resolve();
+        }
+      }, 100);
+      
+      // Timeout après 15 secondes
       setTimeout(() => {
         clearInterval(checkInterval);
         if (window.google && window.google.maps) {
+          if ((window as any)[callbackName]) {
+            delete (window as any)[callbackName];
+          }
           resolve();
         } else {
+          if ((window as any)[callbackName]) {
+            delete (window as any)[callbackName];
+          }
           reject(new Error('Google Maps API loaded but not available'));
         }
-      }, 10000);
+      }, 15000);
+    };
+
+    // Créer et insérer le script avec callback
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async&callback=${callbackName}`;
+    script.async = true;
+    script.defer = true;
+    
+    // Gestionnaire d'erreur pour le script
+    const scriptErrorHandler = () => {
+      if (!scriptRemoved) {
+        scriptRemoved = true;
+        if ((window as any)[callbackName]) {
+          delete (window as any)[callbackName];
+        }
+        if (script.parentNode) {
+          script.remove();
+        }
+        reject(new Error('Failed to load Google Maps script'));
+      }
     };
     
-    script.onerror = () => {
-      reject(new Error('Failed to load Google Maps script'));
+    script.onerror = scriptErrorHandler;
+    
+    script.onload = () => {
+      // Si le callback n'a pas été exécuté après 3 secondes, vérifier manuellement
+      setTimeout(() => {
+        if (!callbackExecuted && !scriptRemoved) {
+          if (window.google && window.google.maps) {
+            if ((window as any)[callbackName]) {
+              delete (window as any)[callbackName];
+            }
+            resolve();
+          } else {
+            // Le script s'est chargé mais l'API n'est pas disponible
+            // Cela peut indiquer une erreur de clé API ou de facturation
+            if ((window as any)[callbackName]) {
+              delete (window as any)[callbackName];
+            }
+            reject(new Error('Google Maps API failed to initialize - check API key and billing'));
+          }
+        }
+      }, 3000);
     };
+    
+    // Ajouter un gestionnaire d'erreur global pour les erreurs Google Maps
+    const errorHandler = (event: ErrorEvent) => {
+      const errorMessage = String(event.message || event.filename || '');
+      const errorSource = String(event.filename || '');
+      
+      // Détecter les erreurs Google Maps spécifiques
+      if ((errorMessage.includes('maps.googleapis.com') || errorSource.includes('maps.googleapis.com') || 
+           errorMessage.includes('Google Maps') || errorMessage.includes('gmp')) && !scriptRemoved) {
+        scriptRemoved = true;
+        if ((window as any)[callbackName]) {
+          delete (window as any)[callbackName];
+        }
+        if (script.parentNode) {
+          script.remove();
+        }
+        
+        // Détecter le type d'erreur spécifique
+        let errorType = 'LoadError';
+        if (errorMessage.includes('BillingNotEnabled') || errorMessage.includes('billing')) {
+          errorType = 'BillingNotEnabled';
+        } else if (errorMessage.includes('ApiNotActivated') || errorMessage.includes('API not enabled')) {
+          errorType = 'ApiNotActivated';
+        } else if (errorMessage.includes('RefererNotAllowed') || errorMessage.includes('referer')) {
+          errorType = 'RefererNotAllowed';
+        } else if (errorMessage.includes('InvalidKey') || errorMessage.includes('invalid key')) {
+          errorType = 'InvalidKey';
+        }
+        
+        reject(new Error(errorType));
+      }
+    };
+    
+    // Gestionnaire pour les rejets de promesses non gérés
+    const unhandledRejectionHandler = (event: PromiseRejectionEvent) => {
+      const errorMessage = String(event.reason?.message || event.reason || '');
+      if ((errorMessage.includes('maps.googleapis.com') || errorMessage.includes('Google Maps')) && !scriptRemoved) {
+        scriptRemoved = true;
+        if ((window as any)[callbackName]) {
+          delete (window as any)[callbackName];
+        }
+        if (script.parentNode) {
+          script.remove();
+        }
+        reject(new Error('Google Maps promise rejection'));
+      }
+    };
+    
+    window.addEventListener('error', errorHandler, { once: true });
+    window.addEventListener('unhandledrejection', unhandledRejectionHandler, { once: true });
     
     document.head.appendChild(script);
+    
+    // Nettoyer après 20 secondes
+    const cleanupTimeout = setTimeout(() => {
+      window.removeEventListener('error', errorHandler);
+      window.removeEventListener('unhandledrejection', unhandledRejectionHandler);
+      if ((window as any)[callbackName] && !callbackExecuted) {
+        delete (window as any)[callbackName];
+      }
+    }, 20000);
+    
+    // Nettoyer le timeout si la promesse est résolue
+    Promise.resolve().then(() => {
+      clearTimeout(cleanupTimeout);
+    });
   });
 };
 
@@ -308,25 +482,56 @@ export function GoogleMapsProvider({ children }: GoogleMapsProviderProps) {
     isInitializing.current = true;
     isScriptLoading = true;
 
-    // Charger le script
-    loadGoogleMapsScript(googleMapsApiKey)
-      .then(() => {
+    // Charger le script avec retry logic
+    const loadWithRetry = async (retries = 2): Promise<void> => {
+      try {
+        await loadGoogleMapsScript(googleMapsApiKey);
         setIsLoaded(true);
         setLoadError(null);
         isScriptLoaded = true;
         isScriptLoading = false;
         hasInitialized.current = true;
         isInitializing.current = false;
-      })
-      .catch((error) => {
+      } catch (error) {
+        // Si on a encore des tentatives, réessayer
+        if (retries > 0) {
+          // Attendre un peu avant de réessayer
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return loadWithRetry(retries - 1);
+        }
+        
+        // Plus de tentatives, définir l'erreur
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        
+        // Détecter le type d'erreur
+        let detectedError: string | null = null;
+        if (errorMessage.includes('BillingNotEnabled') || errorMessage.includes('billing')) {
+          detectedError = "BillingNotEnabled";
+        } else if (errorMessage.includes('ApiNotActivated') || errorMessage.includes('API not enabled')) {
+          detectedError = "ApiNotActivated";
+        } else if (errorMessage.includes('RefererNotAllowed') || errorMessage.includes('referer')) {
+          detectedError = "RefererNotAllowed";
+        } else if (errorMessage.includes('InvalidKey') || errorMessage.includes('invalid key')) {
+          detectedError = "InvalidKey";
+        } else if (errorMessage.includes('Failed to load')) {
+          detectedError = "NetworkError";
+        } else {
+          detectedError = "LoadError";
+        }
+        
         // Utiliser l'erreur originale pour éviter la boucle
-        const originalConsoleError = console.error;
-        originalConsoleError("Erreur lors du chargement de Google Maps:", error);
-        setLoadError("Erreur de chargement");
+        if (import.meta.env.DEV) {
+          console.error("Erreur lors du chargement de Google Maps:", errorMessage);
+        }
+        
+        setLoadError(detectedError);
         isScriptLoading = false;
         hasInitialized.current = true;
         isInitializing.current = false;
-      });
+      }
+    };
+    
+    loadWithRetry();
   }, [googleMapsApiKey]);
 
   return (

@@ -41,6 +41,7 @@ import BoutiqueUsersTablePage from "./pages/Tables/BoutiqueUsersTable";
 import ProductsTablePage from "./pages/Tables/ProductsTable";
 import SalesTablePage from "./pages/Tables/SalesTable";
 import LivreursTablePage from "./pages/Tables/LivreursTable";
+import LivreurDetails from "./pages/Livreurs/LivreurDetails";
 import AdminDetails from "./pages/Admins/AdminDetails";
 import OrdersList from "./pages/Orders/OrdersList";
 import OrderDetails from "./pages/Orders/OrderDetails";
@@ -121,6 +122,7 @@ export default function App() {
             <Route path="/boutique-users-table" element={<BoutiqueUsersTablePage />} />
             <Route path="/boutique-user/:id" element={<BoutiqueUserDetails />} />
             <Route path="/livreurs-table" element={<LivreursTablePage />} />
+            <Route path="/livreurs/:livreurId" element={<LivreurDetails />} />
 
             {/* Produits */}
             <Route path="/products-table" element={<ProductsTablePage />} />
