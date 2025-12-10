@@ -22,7 +22,6 @@ export default function LivreurDetails() {
   const [livreur, setLivreur] = useState<Livreur | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
-  const [successMessage, setSuccessMessage] = useState<string>("");
 
   const loadLivreur = async () => {
     if (!livreurId) {
@@ -118,8 +117,6 @@ export default function LivreurDetails() {
 
       <div className="space-y-6">
         {error && !isLoading && <Alert variant="error" title="Erreur" message={error} />}
-
-        {successMessage && <Alert variant="success" title="Succès" message={successMessage} />}
 
         <ComponentCard
           title={fullName}
