@@ -262,10 +262,15 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
     }
 
     // Vérifier périodiquement si l'API devient disponible
+    let checkCount = 0;
     const checkInterval = setInterval(() => {
+      checkCount++;
       if (typeof window !== "undefined" && window.google && window.google.maps) {
         setLoadError(null);
         clearInterval(checkInterval);
+        if (import.meta.env.DEV) {
+          console.log('[GoogleMapPicker] API is now available after', checkCount * 500, 'ms');
+        }
       }
     }, 500);
 
@@ -274,6 +279,11 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
       clearInterval(checkInterval);
       if (!isApiAvailable && !currentLoadError) {
         // Si après 30 secondes l'API n'est toujours pas disponible, définir une erreur générique
+        if (import.meta.env.DEV) {
+          console.error('[GoogleMapPicker] Timeout: API not available after 30 seconds');
+          console.error('[GoogleMapPicker] isLoaded:', isLoaded, 'isApiAvailable:', isApiAvailable);
+          console.error('[GoogleMapPicker] contextLoadError:', contextLoadError);
+        }
         setLoadError("LoadError");
       }
     }, 30000);
