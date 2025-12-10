@@ -247,11 +247,47 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
   const onLoad = useCallback(() => {
     setIsMapLoaded(true);
     setLoadError(null);
+    if (import.meta.env.DEV) {
+      console.log('[GoogleMapPicker] Map loaded successfully');
+    }
   }, []);
 
   const onUnmount = useCallback(() => {
     setIsMapLoaded(false);
+    if (import.meta.env.DEV) {
+      console.log('[GoogleMapPicker] Map unmounted');
+    }
   }, []);
+
+
+  // Vérifier périodiquement l'état de l'API même après le chargement
+  useEffect(() => {
+    // Vérifier périodiquement si l'API est toujours disponible
+    const apiCheckInterval = setInterval(() => {
+      const apiStillAvailable = typeof window !== "undefined" && window.google && window.google.maps;
+      
+      // Si l'API était disponible mais ne l'est plus, définir une erreur
+      if (isApiAvailable && !apiStillAvailable && isMapLoaded) {
+        if (import.meta.env.DEV) {
+          console.error('[GoogleMapPicker] API became unavailable after initial load');
+        }
+        setLoadError("LoadError");
+        setIsMapLoaded(false);
+      }
+      
+      // Si l'API devient disponible après une erreur, réinitialiser
+      if (!isApiAvailable && apiStillAvailable && currentLoadError) {
+        if (import.meta.env.DEV) {
+          console.log('[GoogleMapPicker] API became available, clearing error');
+        }
+        setLoadError(null);
+      }
+    }, 2000);
+
+    return () => {
+      clearInterval(apiCheckInterval);
+    };
+  }, [isApiAvailable, isMapLoaded, currentLoadError]);
 
   // Détecter les erreurs Google Maps critiques et vérifier périodiquement si l'API est disponible
   useEffect(() => {
@@ -298,18 +334,26 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
         return;
       }
       
+      // Ignorer les avertissements de dépréciation Marker
+      if (errorString.includes('Marker is deprecated') || errorString.includes('AdvancedMarkerElement')) {
+        return;
+      }
+      
       // Détecter les erreurs critiques Google Maps
       if (errorString.includes('maps.googleapis.com') || errorString.includes('Google Maps')) {
-        if (errorString.includes('BillingNotEnabled') || errorString.includes('billing')) {
-          setLoadError("BillingNotEnabled");
-        } else if (errorString.includes('ApiNotActivated') || errorString.includes('API not enabled')) {
-          setLoadError("ApiNotActivated");
-        } else if (errorString.includes('RefererNotAllowed') || errorString.includes('referer')) {
-          setLoadError("RefererNotAllowed");
-        } else if (errorString.includes('InvalidKey') || errorString.includes('invalid key')) {
-          setLoadError("InvalidKey");
-        } else if (!currentLoadError) {
-          setLoadError("LoadError");
+        // Ne définir une erreur que si l'API n'est vraiment plus disponible
+        if (!window.google?.maps) {
+          if (errorString.includes('BillingNotEnabled') || errorString.includes('billing')) {
+            setLoadError("BillingNotEnabled");
+          } else if (errorString.includes('ApiNotActivated') || errorString.includes('API not enabled')) {
+            setLoadError("ApiNotActivated");
+          } else if (errorString.includes('RefererNotAllowed') || errorString.includes('referer')) {
+            setLoadError("RefererNotAllowed");
+          } else if (errorString.includes('InvalidKey') || errorString.includes('invalid key')) {
+            setLoadError("InvalidKey");
+          } else if (!currentLoadError) {
+            setLoadError("LoadError");
+          }
         }
       }
     };
@@ -352,10 +396,11 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
 
 
   const isLoading = !isLoaded || !isMapLoaded;
+  const shouldShowError = currentLoadError && (!isMapLoaded || !isApiAvailable);
 
   return (
     <div className={`relative rounded-lg border border-gray-300 overflow-hidden dark:border-gray-700 ${className}`}>
-      {isLoading && !currentLoadError && (
+      {isLoading && !shouldShowError && (
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
           <div className="text-center">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#04b05d] border-t-transparent mx-auto mb-2" />
@@ -363,7 +408,7 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
           </div>
         </div>
       )}
-      {isLoaded && isApiAvailable ? (
+      {isLoaded && isApiAvailable && isMapLoaded ? (
         <GoogleMap
           mapContainerStyle={containerStyle}
           center={defaultCenter}
