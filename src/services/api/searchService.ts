@@ -120,21 +120,18 @@ const searchService = {
     if (boutiquesResults.status === "fulfilled") {
       results.boutiques = boutiquesResults.value;
     } else if (import.meta.env.DEV) {
-      console.error("Erreur recherche boutiques:", boutiquesResults.reason);
     }
 
     // Traiter les résultats des franchisés
     if (franchisesResults.status === "fulfilled") {
       results.franchises = franchisesResults.value;
     } else if (import.meta.env.DEV) {
-      console.error("Erreur recherche franchisés:", franchisesResults.reason);
     }
 
     // Traiter les résultats des admins
     if (adminsResults.status === "fulfilled") {
       results.admins = adminsResults.value;
     } else if (import.meta.env.DEV) {
-      console.error("Erreur recherche admins:", adminsResults.reason);
     }
 
     results.total = results.products.length + results.boutiques.length + results.franchises.length + results.admins.length;
@@ -214,10 +211,6 @@ const searchService = {
       }));
     } catch (error: unknown) {
       // En cas d'erreur, utiliser le fallback
-      if (import.meta.env.DEV) {
-        const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
-        console.error("Erreur lors de la recherche de produits via API:", errorMessage);
-      }
       return this.searchProductsFallback(searchTerm);
     }
   },
@@ -246,12 +239,8 @@ const searchService = {
           } else {
             currentPage++;
           }
-        } catch (pageError: unknown) {
+        } catch {
           // En cas d'erreur sur une page, arrêter la récupération
-          if (import.meta.env.DEV) {
-            const errorMessage = pageError instanceof Error ? pageError.message : "Erreur inconnue";
-            console.error(`Erreur lors de la récupération de la page ${currentPage}:`, errorMessage);
-          }
           hasMorePages = false;
         }
       }
@@ -278,11 +267,7 @@ const searchService = {
           status: product.status,
         },
       }));
-    } catch (error: unknown) {
-      if (import.meta.env.DEV) {
-        const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
-        console.error("Erreur lors de la recherche de produits (fallback):", errorMessage);
-      }
+    } catch {
       return [];
     }
   },
@@ -379,12 +364,7 @@ const searchService = {
           commune_id: boutique.commune_id,
         },
       }));
-    } catch (error: unknown) {
-      if (import.meta.env.DEV) {
-        // Logger uniquement le message, pas l'objet complet pour éviter d'exposer des informations sensibles
-        const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
-        console.error("Erreur lors de la recherche de boutiques (fallback):", errorMessage);
-      }
+    } catch {
       return [];
     }
   },
@@ -447,12 +427,7 @@ const searchService = {
           },
         };
       });
-    } catch (error: unknown) {
-      if (import.meta.env.DEV) {
-        // Logger uniquement le message, pas l'objet complet pour éviter d'exposer des informations sensibles
-        const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
-        console.error("Erreur lors de la recherche de franchisés:", errorMessage);
-      }
+    } catch {
       return [];
     }
   },
@@ -511,12 +486,7 @@ const searchService = {
           status: admin.status,
         },
       }));
-    } catch (error: unknown) {
-      if (import.meta.env.DEV) {
-        // Logger uniquement le message, pas l'objet complet pour éviter d'exposer des informations sensibles
-        const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
-        console.error("Erreur lors de la recherche d'admins:", errorMessage);
-      }
+    } catch {
       return [];
     }
   },

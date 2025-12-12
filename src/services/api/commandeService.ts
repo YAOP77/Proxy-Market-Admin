@@ -224,9 +224,6 @@ async function getCommandes(page: number = 1, search?: string): Promise<Normaliz
       },
     };
   } catch (error: unknown) {
-    if (import.meta.env.DEV) {
-      console.error("[CommandeService] Erreur lors de la récupération des commandes");
-    }
 
     if (error instanceof Error) {
       throw new Error(error.message || "Erreur lors de la récupération des commandes");
@@ -276,9 +273,6 @@ async function getCommandeDetail(commandeId: string): Promise<CommandeDetail> {
     // Sinon, retourner directement
     return responseData as CommandeDetail;
   } catch (error: unknown) {
-    if (import.meta.env.DEV) {
-      console.error("[CommandeService] Erreur lors de la récupération des détails de la commande");
-    }
 
     if (error instanceof Error) {
       throw new Error(error.message || "Erreur lors de la récupération des détails de la commande");

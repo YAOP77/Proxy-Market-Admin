@@ -6,6 +6,7 @@
  */
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router";
 import PageBreadcrumb from "../components/common/PageBreadCrumb";
 import PageMeta from "../components/common/PageMeta";
 import reportService, { ReportsData } from "../services/api/reportService";
@@ -65,6 +66,7 @@ function AccordionItem({ title, count, icon, isOpen, onToggle, children }: Accor
 
 export default function Statistics() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [reportsData, setReportsData] = useState<ReportsData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -109,8 +111,8 @@ export default function Statistics() {
       setLoadingBoutiques(true);
       const allBoutiques = await franchiseService.getAllBoutiques();
       setBoutiques(allBoutiques);
-    } catch (err) {
-      console.error("Erreur lors du chargement des boutiques:", err);
+    } catch {
+      // Erreur silencieuse - gérée par l'état d'erreur
     } finally {
       setLoadingBoutiques(false);
     }
@@ -137,8 +139,8 @@ export default function Statistics() {
       }
 
       setProducts(allProducts);
-    } catch (err) {
-      console.error("Erreur lors du chargement des produits:", err);
+    } catch {
+      // Erreur silencieuse - gérée par l'état d'erreur
     } finally {
       setLoadingProducts(false);
     }
@@ -165,8 +167,8 @@ export default function Statistics() {
       }
 
       setClients(allClients);
-    } catch (err) {
-      console.error("Erreur lors du chargement des clients:", err);
+    } catch {
+      // Erreur silencieuse - gérée par l'état d'erreur
     } finally {
       setLoadingClients(false);
     }
@@ -193,12 +195,46 @@ export default function Statistics() {
       }
 
       setLivreurs(allLivreurs);
-    } catch (err) {
-      console.error("Erreur lors du chargement des livreurs:", err);
+    } catch {
+      // Erreur silencieuse - gérée par l'état d'erreur
     } finally {
       setLoadingLivreurs(false);
     }
   };
+
+  // Ouvrir automatiquement l'accordion si un paramètre section est présent dans l'URL
+  useEffect(() => {
+    const section = searchParams.get("section");
+    if (section && ["clients", "boutiques", "produits", "livreurs"].includes(section)) {
+      setOpenAccordion(section);
+      
+      // Charger les données de la section si nécessaire
+      if (section === "boutiques" && boutiques.length === 0) {
+        loadBoutiques();
+      } else if (section === "produits" && products.length === 0) {
+        loadProducts();
+      } else if (section === "clients" && clients.length === 0) {
+        loadClients();
+      } else if (section === "livreurs" && livreurs.length === 0) {
+        loadLivreurs();
+      }
+      
+      // Scroller vers la section après un délai pour laisser le temps au DOM de se mettre à jour
+      // Utiliser un délai plus long pour s'assurer que l'accordion est ouvert et le contenu rendu
+      const scrollTimeout = setTimeout(() => {
+        const element = document.getElementById(`accordion-${section}`);
+        if (element) {
+          // Calculer un offset pour tenir compte du header fixe si nécessaire
+          const yOffset = -80; // Ajuster selon la hauteur du header
+          const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+          window.scrollTo({ top: y, behavior: "smooth" });
+        }
+      }, 500);
+      
+      return () => clearTimeout(scrollTimeout);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, openAccordion]);
 
   // Gérer l'ouverture/fermeture des accordéons
   const handleToggleAccordion = (accordionId: string) => {
@@ -595,17 +631,18 @@ export default function Statistics() {
           
           <div className="p-6 space-y-4">
             {/* Accordéon Boutiques */}
-            <AccordionItem
-              title="Boutiques"
-              count={reportsData.all_boutique}
-              icon={
-                <svg className="w-5 h-5 text-[#04b05d]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              }
-              isOpen={openAccordion === "boutiques"}
-              onToggle={() => handleToggleAccordion("boutiques")}
-            >
+            <div id="accordion-boutiques">
+              <AccordionItem
+                title="Boutiques"
+                count={reportsData.all_boutique}
+                icon={
+                  <svg className="w-5 h-5 text-[#04b05d]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                }
+                isOpen={openAccordion === "boutiques"}
+                onToggle={() => handleToggleAccordion("boutiques")}
+              >
               <div className="p-4">
                 {loadingBoutiques ? (
                   <div className="flex items-center justify-center py-8">
@@ -623,8 +660,8 @@ export default function Statistics() {
                           <div className="w-10 h-10 rounded-lg bg-[#04b05d]/10 flex items-center justify-center">
                             <svg className="w-5 h-5 text-[#04b05d]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                            </svg>
-                          </div>
+              </svg>
+            </div>
                           <div>
                             <p className="text-sm font-medium text-gray-800 dark:text-white/90">{boutique.name}</p>
                             <p className="text-xs text-gray-500 dark:text-gray-400">{boutique.adresse || "Aucune adresse"}</p>
@@ -644,11 +681,13 @@ export default function Statistics() {
                   <p className="text-center text-gray-500 dark:text-gray-400 py-8">Aucune boutique disponible</p>
                 )}
               </div>
-            </AccordionItem>
+              </AccordionItem>
+          </div>
 
             {/* Accordéon Produits */}
-            <AccordionItem
-              title="Produits"
+            <div id="accordion-produits">
+              <AccordionItem
+                title="Produits"
               count={reportsData.all_produit}
               icon={
                 <svg className="w-5 h-5 text-[#04b05d]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -712,11 +751,13 @@ export default function Statistics() {
                   <p className="text-center text-gray-500 dark:text-gray-400 py-8">Aucun produit disponible</p>
                 )}
               </div>
-            </AccordionItem>
+              </AccordionItem>
+            </div>
 
             {/* Accordéon Clients */}
-            <AccordionItem
-              title="Clients"
+            <div id="accordion-clients">
+              <AccordionItem
+                title="Clients"
               count={reportsData.all_client}
               icon={
                 <svg className="w-5 h-5 text-[#04b05d]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -778,11 +819,13 @@ export default function Statistics() {
                   <p className="text-center text-gray-500 dark:text-gray-400 py-8">Aucun client disponible</p>
                 )}
               </div>
-            </AccordionItem>
+              </AccordionItem>
+          </div>
 
             {/* Accordéon Livreurs */}
-            <AccordionItem
-              title="Livreurs"
+            <div id="accordion-livreurs">
+              <AccordionItem
+                title="Livreurs"
               count={reportsData.all_livreur}
               icon={
                 <svg className="w-5 h-5 text-[#04b05d]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -844,7 +887,8 @@ export default function Statistics() {
                   <p className="text-center text-gray-500 dark:text-gray-400 py-8">Aucun livreur disponible</p>
                 )}
               </div>
-            </AccordionItem>
+              </AccordionItem>
+            </div>
           </div>
         </div>
       </div>

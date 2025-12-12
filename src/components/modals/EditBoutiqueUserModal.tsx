@@ -58,7 +58,6 @@ const EditBoutiqueUserModal = ({
         // Logger uniquement le message d'erreur, pas l'objet complet
         if (import.meta.env.DEV) {
           const errorMessage = err instanceof Error ? err.message : "Erreur inconnue";
-          console.error("Erreur lors du chargement des communes:", errorMessage);
         }
       } finally {
         setIsLoadingCommunes(false);

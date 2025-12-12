@@ -80,7 +80,6 @@ export default function BoutiqueUsersTablePage() {
         
         // Logger uniquement le message d'erreur, pas l'objet complet
         if (import.meta.env.DEV) {
-          console.error("Erreur lors du chargement des boutiques:", errorMessage);
         }
       } finally {
         setIsLoadingBoutiques(false);

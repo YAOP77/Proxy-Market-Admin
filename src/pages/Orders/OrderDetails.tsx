@@ -55,10 +55,10 @@ const getStatusStyles = (statusText: string, statusBg: string): { color: "succes
   }
   
   // Commande annulée -> error (rouge)
-  if (statusBg === "danger" || lowerText.includes("annulée") || lowerText.includes("annulee")) {
+  if (statusBg === "danger" || lowerText.includes("annulée") || lowerText.includes("annulee") || lowerText.includes("inactif") || lowerText.includes("inactive")) {
     return {
       color: "error",
-      className: "border border-red-300 dark:border-red-600",
+      className: "bg-red-100 text-red-600 border border-red-300 dark:bg-red-500/15 dark:text-red-400 dark:border-red-600",
     };
   }
   
@@ -288,6 +288,43 @@ export default function OrderDetails() {
                   </p>
                 </div>
               )}
+
+              {(orderData.adresse_livraison?.latitude || orderData.adresse_livraison?.longitude) && (
+                <div>
+                  <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                    Coordonnées géographiques
+                  </label>
+                  <p className="mt-1 text-sm font-medium text-gray-800 dark:text-white/90">
+                    {orderData.adresse_livraison.latitude && orderData.adresse_livraison.longitude
+                      ? `${orderData.adresse_livraison.latitude}, ${orderData.adresse_livraison.longitude}`
+                      : orderData.adresse_livraison.latitude || orderData.adresse_livraison.longitude || "—"}
+                  </p>
+                </div>
+              )}
+
+              {(orderData.adresse_livraison?.contact1 || orderData.adresse_livraison?.contact2) && (
+                <div>
+                  <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                    Contact livraison
+                  </label>
+                  <div className="mt-1 space-y-1">
+                    {orderData.adresse_livraison.contact1 && (
+                      <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                        <span className="inline-block text-xs text-yellow-500 border border-yellow-300 bg-yellow-50 dark:border-yellow-600 dark:bg-yellow-900/20 rounded-full px-2 py-1">
+                          {orderData.adresse_livraison.contact1}
+                        </span>
+                      </p>
+                    )}
+                    {orderData.adresse_livraison.contact2 && (
+                      <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                        <span className="inline-block text-xs text-yellow-500 border border-yellow-300 bg-yellow-50 dark:border-yellow-600 dark:bg-yellow-900/20 rounded-full px-2 py-1">
+                          {orderData.adresse_livraison.contact2}
+                        </span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </ComponentCard>
@@ -328,7 +365,10 @@ export default function OrderDetails() {
                       {produit.valeur_poids && produit.unite_poids && (
                         <span>Poids: <strong>{produit.valeur_poids} {produit.unite_poids}</strong></span>
                       )}
-                      {produit.total_prix && produit.total_prix !== "0 FCFA" && (
+                      {produit.categorie && (
+                        <span>Catégorie: <strong>{produit.categorie}</strong></span>
+                      )}
+                      {produit.total_prix && (
                         <span>Total: <strong>{produit.total_prix}</strong></span>
                       )}
                     </div>
@@ -462,6 +502,51 @@ export default function OrderDetails() {
               </label>
               <p className="mt-1 text-sm font-medium text-gray-800 dark:text-white/90">
                 {orderData.modepaiement}
+              </p>
+            </div>
+          )}
+
+          {orderData.status !== undefined && (
+            <div>
+              <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                Statut numérique
+              </label>
+              <p className="mt-1 text-sm font-medium text-gray-800 dark:text-white/90">
+                {orderData.status}
+              </p>
+            </div>
+          )}
+
+          {orderData.created_at && (
+            <div>
+              <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                Date de création (API)
+              </label>
+              <p className="mt-1 text-sm font-medium text-gray-800 dark:text-white/90">
+                {new Date(orderData.created_at).toLocaleString("fr-FR", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
+            </div>
+          )}
+
+          {orderData.updated_at && (
+            <div>
+              <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                Dernière mise à jour
+              </label>
+              <p className="mt-1 text-sm font-medium text-gray-800 dark:text-white/90">
+                {new Date(orderData.updated_at).toLocaleString("fr-FR", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </p>
             </div>
           )}

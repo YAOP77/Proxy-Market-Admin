@@ -74,9 +74,6 @@ async function getReports(): Promise<ReportsData> {
     // Sinon, retourner directement
     return responseData as ReportsData;
   } catch (error: unknown) {
-    if (import.meta.env.DEV) {
-      console.error("[ReportService] Erreur lors de la récupération des rapports");
-    }
 
     if (error instanceof Error) {
       throw new Error(error.message || "Erreur lors de la récupération des rapports");

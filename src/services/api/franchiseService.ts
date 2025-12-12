@@ -22,6 +22,7 @@ export interface CreateFranchiseData {
   adresse: string;
   latitude: number;
   longitude: number;
+  location_name: string;
   commune_id: number;
   status: string; // "0" ou "1" (chaîne) - le backend le convertit en nombre
 }
@@ -48,6 +49,7 @@ export interface Boutique {
   logo: string | null;
   details: string | null;
   adresse: string;
+  location_name: string | null;
   localisation: string; // Format WKB/PostGIS
   commune_id: number;
   created_by: string;
@@ -69,6 +71,7 @@ export interface UpdateBoutiqueData {
   adresse: string;
   latitude: number;
   longitude: number;
+  location_name: string;
   commune_id: number;
   status: string; // "0" ou "1" (chaîne) - le backend le convertit en nombre
 }
@@ -426,6 +429,13 @@ const franchiseService = {
       // Champs requis selon la réponse de l'API : name, email, contact_1, contact_2 (peut être vide), 
       // adresse, latitude, longitude, commune_id, status
       // NOTE: Pas de champ password - le backend ne l'attend pas pour la création de boutique
+      
+      // S'assurer que location_name n'est jamais vide
+      const locationNameValue = franchiseData.location_name.trim();
+      if (!locationNameValue) {
+        throw new Error("Le champ location_name est requis et ne peut pas être vide");
+      }
+      
       const payload: Record<string, unknown> = {
         name: franchiseData.name.trim(),
         email: franchiseData.email.trim().toLowerCase(),
@@ -436,6 +446,7 @@ const franchiseService = {
         adresse: franchiseData.adresse.trim(),
         latitude: latitudeNum,
         longitude: longitudeNum,
+        location_name: locationNameValue,
         commune_id: Number(franchiseData.commune_id),
         status: franchiseData.status,
       };
@@ -605,6 +616,13 @@ const franchiseService = {
       }
       
       // Préparer les données exactement comme l'API les attend
+      
+      // S'assurer que location_name n'est jamais vide
+      const locationNameValue = boutiqueData.location_name.trim();
+      if (!locationNameValue) {
+        throw new Error("Le champ location_name est requis et ne peut pas être vide");
+      }
+      
       const payload: Record<string, unknown> = {
         name: boutiqueData.name.trim(),
         email: boutiqueData.email.trim().toLowerCase(),
@@ -615,6 +633,7 @@ const franchiseService = {
         adresse: boutiqueData.adresse.trim(),
         latitude: latitudeNum,
         longitude: longitudeNum,
+        location_name: locationNameValue,
         commune_id: Number(boutiqueData.commune_id),
         status: boutiqueData.status,
       };

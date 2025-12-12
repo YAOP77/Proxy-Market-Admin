@@ -20,9 +20,6 @@ if (API_BASE_URL && typeof API_BASE_URL === "string") {
   // Si l'URL commence par http://, la remplacer par https://
   if (API_BASE_URL.startsWith("http://")) {
     API_BASE_URL = API_BASE_URL.replace("http://", "https://");
-    if (import.meta.env.DEV) {
-      console.warn("[AxiosConfig] URL HTTP détectée, conversion automatique en HTTPS pour éviter les erreurs CORS");
-    }
   }
   // S'assurer que l'URL se termine par /api si elle ne contient pas déjà /api
   if (!API_BASE_URL.includes("/api")) {
@@ -30,15 +27,7 @@ if (API_BASE_URL && typeof API_BASE_URL === "string") {
   }
 }
 
-// Debug en développement : Afficher uniquement si l'URL est configurée (sans exposer l'URL complète)
-if (import.meta.env.DEV) {
-  if (API_BASE_URL) {
-    // Ne logger que l'information que l'URL est configurée, pas l'URL complète
-    console.log("[AxiosConfig] URL API configurée");
-  } else {
-    console.warn("[AxiosConfig] URL API non configurée");
-  }
-}
+// Vérification silencieuse de la configuration en développement
 
 // Vérifier que la variable est définie
 if (!API_BASE_URL) {

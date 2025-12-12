@@ -125,9 +125,6 @@ async function getClients(page: number = 1, search?: string): Promise<Normalized
       },
     };
   } catch (error: unknown) {
-    if (import.meta.env.DEV) {
-      console.error("[ClientService] Erreur lors de la récupération des clients");
-    }
 
     if (error instanceof Error) {
       throw new Error(error.message || "Erreur lors de la récupération des clients");
@@ -137,8 +134,63 @@ async function getClients(page: number = 1, search?: string): Promise<Normalized
   }
 }
 
+/**
+ * Interface pour la réponse de détails d'un client
+ */
+export interface ClientDetailResponse {
+  data: Client;
+}
+
+/**
+ * Récupère les détails d'un client par son ID
+ * @param clientId - Identifiant du client (UUID)
+ * @returns Promise avec les données du client
+ */
+async function getClientById(clientId: string): Promise<Client> {
+  try {
+    const response = await apiClient.get<ClientDetailResponse | string>(`/clients/${clientId}`);
+
+    // Vérifier si la réponse est une chaîne d'erreur (ex: "vous êtes pas connecté")
+    if (typeof response.data === "string") {
+      const responseString: string = response.data;
+      const lowerResponse = responseString.toLowerCase();
+      if (
+        lowerResponse.includes("connecté") ||
+        lowerResponse.includes("connecte") ||
+        lowerResponse.includes("authentification") ||
+        lowerResponse.includes("unauthorized")
+      ) {
+        throw new Error("Non authentifié. Veuillez vous reconnecter.");
+      }
+      throw new Error("Réponse inattendue de l'API");
+    }
+
+    // Vérifier que response.data existe et est un objet
+    if (!response.data || typeof response.data !== "object") {
+      throw new Error("Structure de réponse inattendue de l'API");
+    }
+
+    const apiResponse = response.data as ClientDetailResponse;
+
+    // Vérifier que data existe
+    if (!apiResponse.data) {
+      throw new Error("Données client introuvables dans la réponse");
+    }
+
+    return apiResponse.data;
+  } catch (error: unknown) {
+
+    if (error instanceof Error) {
+      throw new Error(error.message || "Erreur lors de la récupération du client");
+    }
+
+    throw new Error("Erreur lors de la récupération du client");
+  }
+}
+
 const clientService = {
   getClients,
+  getClientById,
 };
 
 export default clientService;

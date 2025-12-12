@@ -42,6 +42,7 @@ import ProductsTablePage from "./pages/Tables/ProductsTable";
 import SalesTablePage from "./pages/Tables/SalesTable";
 import LivreursTablePage from "./pages/Tables/LivreursTable";
 import LivreurDetails from "./pages/Livreurs/LivreurDetails";
+import ClientDetails from "./pages/Clients/ClientDetails";
 import AdminDetails from "./pages/Admins/AdminDetails";
 import OrdersList from "./pages/Orders/OrdersList";
 import OrderDetails from "./pages/Orders/OrderDetails";
@@ -117,6 +118,7 @@ export default function App() {
             <Route path="/basic-tables" element={<BasicTables />} />
             <Route path="/boutiques/:boutiqueId" element={<BoutiqueDetails />} />
             <Route path="/users-table" element={<UsersTablePage />} />
+            <Route path="/users/:clientId" element={<ClientDetails />} />
             <Route path="/admins-table" element={<AdminsTablePage />} />
             <Route path="/admins/:adminId" element={<AdminDetails />} />
             <Route path="/boutique-users-table" element={<BoutiqueUsersTablePage />} />

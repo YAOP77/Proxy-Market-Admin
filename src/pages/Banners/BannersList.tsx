@@ -99,7 +99,6 @@ export default function BannersList() {
       } catch (err: unknown) {
         // En cas d'erreur, on continue sans categories
         if (import.meta.env.DEV) {
-          console.error("[BannersList] Erreur chargement categories");
         }
       }
     };

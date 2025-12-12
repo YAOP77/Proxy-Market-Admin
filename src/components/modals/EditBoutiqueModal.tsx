@@ -10,7 +10,7 @@ import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Select from "../form/Select";
 import Button from "../ui/button/Button";
-import GoogleMapPicker from "../maps/GoogleMapPicker";
+import GoogleMapPicker, { LocationData } from "../maps/GoogleMapPicker";
 import franchiseService, { Boutique, UpdateBoutiqueData } from "../../services/api/franchiseService";
 import { adminService, Commune } from "../../services/api/adminService";
 import { cleanPhoneNumber, validatePhoneNumber } from "../../utils/phoneUtils";
@@ -39,6 +39,7 @@ export default function EditBoutiqueModal({
   const [status, setStatus] = useState("");
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
+  const [locationName, setLocationName] = useState<string>("");
 
   // État pour les alertes
   const [showWarningAlert, setShowWarningAlert] = useState(false);
@@ -62,6 +63,7 @@ export default function EditBoutiqueModal({
       setContact1(boutique.contact_1 || "");
       setContact2(boutique.contact_2 || "");
       setAdresse(boutique.adresse || "");
+      setLocationName(boutique.location_name || "");
       setCommuneId(boutique.commune_id ? String(boutique.commune_id) : "");
       // Convertir le status de number (1/0) vers "actif"/"inactif" pour le formulaire
       if (boutique.status !== null && boutique.status !== undefined) {
@@ -142,9 +144,27 @@ export default function EditBoutiqueModal({
   /**
    * Gère la sélection de localisation sur la carte
    */
-  const handleLocationSelect = useCallback((lat: number, lng: number) => {
-    setLatitude(lat);
-    setLongitude(lng);
+  const handleLocationSelect = useCallback((locationData: LocationData) => {
+    setLatitude(locationData.lat);
+    setLongitude(locationData.lng);
+    
+    // Si des informations d'adresse sont disponibles, mettre à jour le champ adresse
+    if (locationData.address) {
+      // Utiliser formatted_address si disponible, sinon location_name
+      const addressToUse = locationData.address.formatted_address || locationData.address.location_name;
+      if (addressToUse) {
+        setAdresse(addressToUse);
+      }
+      
+      // Stocker location_name pour l'envoyer à l'API
+      if (locationData.address.location_name) {
+        setLocationName(locationData.address.location_name);
+      } else {
+        setLocationName("");
+      }
+    } else {
+      setLocationName("");
+    }
   }, []);
 
   /**
@@ -287,6 +307,16 @@ export default function EditBoutiqueModal({
       }
 
       // Préparer les données pour l'API avec les valeurs finales
+      // Utiliser location_name si disponible, sinon utiliser l'adresse comme fallback
+      const locationNameValue = locationName.trim() || finalAdresse;
+      
+      // S'assurer que location_name n'est jamais vide
+      if (!locationNameValue) {
+        setError("La localisation est requise. Veuillez sélectionner un emplacement sur la carte.");
+        setIsLoading(false);
+        return;
+      }
+      
       const boutiqueData: UpdateBoutiqueData = {
         name: finalName,
         email: finalEmail.toLowerCase(),
@@ -295,6 +325,7 @@ export default function EditBoutiqueModal({
         adresse: finalAdresse,
         latitude: latitudeNum,
         longitude: longitudeNum,
+        location_name: locationNameValue,
         commune_id: parsedCommuneId,
         status: apiStatus,
       };
@@ -328,7 +359,7 @@ export default function EditBoutiqueModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-4xl max-h-[90vh] overflow-y-auto">
       <div className="p-6">
-        <h3 className="text-xl font-semibold text-gray-800 dark:text-white/90 mb-6">
+        <h3 className="text-xl font-semibold text-[#04b05d] dark:text-[#04b05d] mb-6">
           Modifier la boutique
         </h3>
 
@@ -415,19 +446,6 @@ export default function EditBoutiqueModal({
               </p>
             </div>
 
-            <div className="md:col-span-2">
-              <Label htmlFor="edit-adresse">
-                Adresse <span className="text-error-500">*</span>
-              </Label>
-              <Input
-                id="edit-adresse"
-                type="text"
-                value={adresse}
-                onChange={(e) => setAdresse(e.target.value)}
-                placeholder="Adresse complète"
-                disabled={isLoading}
-              />
-            </div>
 
             <div>
               <Label htmlFor="edit-commune">
@@ -503,6 +521,42 @@ export default function EditBoutiqueModal({
                     className="bg-gray-50 dark:bg-gray-800"
                   />
                 </div>
+                
+                {/* Adresse - verrouillée et pré-remplie automatiquement */}
+                <div className="md:col-span-2">
+                  <Label htmlFor="edit-adresse">
+                    Adresse <span className="text-error-500">*</span>
+                  </Label>
+                  <Input
+                    id="edit-adresse"
+                    type="text"
+                    value={adresse}
+                    disabled
+                    className="bg-gray-50 dark:bg-gray-800"
+                    placeholder="L'adresse sera détectée automatiquement depuis la carte"
+                  />
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Cette adresse est automatiquement détectée depuis Google Maps lors de la sélection d'un emplacement
+                  </p>
+                </div>
+                
+                {/* Localisation - verrouillée et pré-remplie automatiquement */}
+                {locationName && (
+                  <div className="md:col-span-2">
+                    <Label htmlFor="edit-location-name">Localisation</Label>
+                    <Input
+                      id="edit-location-name"
+                      type="text"
+                      value={locationName}
+                      disabled
+                      className="bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700"
+                      placeholder="La localisation sera détectée automatiquement depuis la carte"
+                    />
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      Cette localisation est automatiquement détectée depuis Google Maps lors de la sélection d'un emplacement
+                    </p>
+                  </div>
+                )}
               </div>
             )}
             {latitude === null && longitude === null && (

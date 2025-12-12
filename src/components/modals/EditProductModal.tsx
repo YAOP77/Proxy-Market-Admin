@@ -256,10 +256,6 @@ export default function EditProductModal({
           setDetailedProduct(fullProduct);
         }
       } catch (error) {
-        if (!isCancelled && import.meta.env.DEV) {
-          const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
-          console.error("[EditProductModal] Erreur chargement produit:", errorMessage);
-        }
         if (!isCancelled) {
           setDetailedProduct(null);
         }
@@ -626,7 +622,6 @@ export default function EditProductModal({
           : undefined;
 
       if (import.meta.env.DEV && existingPhotosPayload) {
-        console.log("[EditProductModal] Nombre de photos existantes à envoyer:", existingPhotosPayload.length);
       }
 
       // Préparer les données

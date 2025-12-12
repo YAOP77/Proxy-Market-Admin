@@ -85,7 +85,6 @@ export default function AddBanner() {
         // En cas d'erreur, on continue sans categories
         setCategories([]);
         if (import.meta.env.DEV) {
-          console.error("[AddBanner] Erreur chargement categories");
         }
       } finally {
         setIsLoadingCategories(false);

@@ -125,9 +125,6 @@ async function getLivreurs(page: number = 1, search?: string): Promise<Normalize
       },
     };
   } catch (error: unknown) {
-    if (import.meta.env.DEV) {
-      console.error("[LivreurService] Erreur lors de la récupération des livreurs");
-    }
 
     if (error instanceof Error) {
       throw new Error(error.message || "Erreur lors de la récupération des livreurs");
@@ -184,9 +181,6 @@ async function getLivreurById(livreurId: string): Promise<Livreur> {
     // Sinon, retourner directement
     return responseData as Livreur;
   } catch (error: unknown) {
-    if (import.meta.env.DEV) {
-      console.error("[LivreurService] Erreur lors de la récupération des détails du livreur");
-    }
 
     if (error instanceof Error) {
       throw new Error(error.message || "Erreur lors de la récupération des détails du livreur");

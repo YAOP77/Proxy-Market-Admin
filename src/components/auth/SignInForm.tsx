@@ -113,7 +113,7 @@ export default function SignInForm() {
       {/* Logo Proxy Market - En haut à gauche (fixed pour être vraiment en haut) */}
       <div className="fixed -top-2 sm:-top-1 md:top-0 lg:top-2 left-10 sm:left-14 md:left-18 lg:left-24 z-50">
         <img 
-          src="/Logo-Proxy-Market.png" 
+          src="/Logo-Proxy-Market-Group.png" 
           alt="Proxy Market Logo" 
           className="h-8 sm:h-10 md:h-12 lg:h-14 w-auto"
         />

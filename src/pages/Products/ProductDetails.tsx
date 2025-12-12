@@ -58,10 +58,6 @@ export default function ProductDetails() {
       setProduct(productData);
       setSelectedImageIndex(0);
       
-      if (import.meta.env.DEV && productData.all_photos) {
-        // Ne pas logger les URLs complètes pour éviter d'exposer des informations
-        console.log("[ProductDetails] Nombre d'images chargées:", productData.all_photos.length);
-      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erreur lors du chargement du produit";
       setError(message);
@@ -90,10 +86,6 @@ export default function ProductDetails() {
     if (!product) return [];
     const productImages = getProductImages(product);
     
-    if (import.meta.env.DEV) {
-      // Ne pas logger les données d'images complètes pour éviter d'exposer des informations
-      console.log("[ProductDetails] Nombre d'images traitées:", productImages.length);
-    }
     
     return productImages;
   }, [product]);

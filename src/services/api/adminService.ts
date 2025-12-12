@@ -927,9 +927,6 @@ export const adminService = {
             typeof commune.libelle === "string"
         );
         
-        if (import.meta.env.DEV && validCommunes.length !== response.data.length) {
-          console.warn("getCommunes: Certaines communes ont une structure invalide");
-        }
         
         return validCommunes;
       }
@@ -944,9 +941,6 @@ export const adminService = {
             typeof commune.libelle === "string"
         );
         
-        if (import.meta.env.DEV && validCommunes.length !== response.data.data.length) {
-          console.warn("getCommunes: Certaines communes ont une structure invalide");
-        }
         
         return validCommunes;
       }
@@ -961,20 +955,11 @@ export const adminService = {
             typeof commune.libelle === "string"
         );
         
-        if (import.meta.env.DEV && validCommunes.length !== response.data.communes.length) {
-          console.warn("getCommunes: Certaines communes ont une structure invalide");
-        }
         
         return validCommunes;
       }
       
       // Structure de réponse non reconnue
-      if (import.meta.env.DEV) {
-        // Ne pas logger response.data pour éviter d'exposer des informations sensibles
-        if (import.meta.env.DEV) {
-          console.warn("getCommunes: Structure de réponse non reconnue");
-        }
-      }
       
       return [];
     } catch (error: unknown) {
@@ -1004,30 +989,18 @@ export const adminService = {
           throw new Error(errorMessage);
         }
         
-        // Autres erreurs HTTP : retourner un tableau vide mais logger en mode développement
-        if (import.meta.env.DEV) {
-          // Ne logger que le statut, pas les détails de l'erreur pour éviter d'exposer des informations sensibles
-          console.error("getCommunes: Erreur lors de la récupération des communes (statut:", status + ")");
-        }
+        // Autres erreurs HTTP : retourner un tableau vide
         
         // Retourner un tableau vide pour ne pas bloquer le formulaire
         // L'utilisateur pourra toujours créer une boutique même si les communes ne sont pas chargées
         return [];
       } else if (error && typeof error === "object" && "request" in error) {
         // Erreur réseau : aucune réponse du serveur
-        if (import.meta.env.DEV) {
-          console.error("getCommunes: Erreur réseau - Aucune réponse du serveur");
-        }
-        
         // Retourner un tableau vide pour ne pas bloquer le formulaire
         return [];
       } else {
         // Autre type d'erreur : propager si c'est une Error, sinon retourner un tableau vide
         if (error instanceof Error) {
-          // En mode développement, logger uniquement le message, pas l'objet complet
-          if (import.meta.env.DEV) {
-            console.error("getCommunes: Erreur inattendue:", error.message);
-          }
           // Ne pas propager l'erreur pour ne pas bloquer le formulaire
           return [];
         }

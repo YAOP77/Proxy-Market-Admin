@@ -18,7 +18,7 @@ import Input from "../../components/form/input/InputField";
 import Select from "../../components/form/Select";
 import Button from "../../components/ui/button/Button";
 import Alert from "../../components/ui/alert/Alert";
-import GoogleMapPicker from "../../components/maps/GoogleMapPicker";
+import GoogleMapPicker, { LocationData } from "../../components/maps/GoogleMapPicker";
 import franchiseService, { CreateFranchiseData } from "../../services/api/franchiseService";
 import { adminService, Commune } from "../../services/api/adminService";
 import { cleanPhoneNumber, validatePhoneNumber } from "../../utils/phoneUtils";
@@ -33,6 +33,7 @@ export default function AddFranchise() {
   const [contact1, setContact1] = useState("");
   const [contact2, setContact2] = useState("");
   const [adresse, setAdresse] = useState("");
+  const [locationName, setLocationName] = useState("");
   const [communeId, setCommuneId] = useState("");
   const [status, setStatus] = useState("");
   const [latitude, setLatitude] = useState<number | null>(null);
@@ -80,10 +81,6 @@ export default function AddFranchise() {
         setCommunesError(errorMessage);
         setCommunes([]);
         
-        // En mode développement, logger l'erreur pour faciliter le débogage
-        if (import.meta.env.DEV) {
-          console.error("Erreur lors du chargement des communes:", errorMessage);
-        }
       } finally {
         setIsLoadingCommunes(false);
       }
@@ -151,9 +148,27 @@ export default function AddFranchise() {
   /**
    * Gère la sélection de localisation sur la carte
    */
-  const handleLocationSelect = useCallback((lat: number, lng: number) => {
-    setLatitude(lat);
-    setLongitude(lng);
+  const handleLocationSelect = useCallback((locationData: LocationData) => {
+    setLatitude(locationData.lat);
+    setLongitude(locationData.lng);
+    
+    // Si des informations d'adresse sont disponibles
+    if (locationData.address) {
+      // Afficher location_name dans un champ séparé
+      if (locationData.address.location_name) {
+        setLocationName(locationData.address.location_name);
+      } else {
+        setLocationName("");
+      }
+      
+      // Mettre à jour le champ adresse avec formatted_address à chaque nouveau clic
+      if (locationData.address.formatted_address) {
+        setAdresse(locationData.address.formatted_address);
+      }
+    } else {
+      // Réinitialiser location_name si aucune adresse n'est trouvée
+      setLocationName("");
+    }
   }, []);
 
   /**
@@ -226,6 +241,15 @@ export default function AddFranchise() {
       // Préparer les données pour l'API
       // Seuls les champs requis par le backend sont envoyés (selon la réponse API)
       // NOTE: Pas de champ password - le backend ne l'attend pas pour la création de boutique
+      
+      // S'assurer que location_name n'est jamais vide
+      const finalLocationName = locationName.trim() || adresse.trim();
+      if (!finalLocationName) {
+        setError("La localisation est requise. Veuillez sélectionner un emplacement sur la carte.");
+        setIsLoading(false);
+        return;
+      }
+      
       const franchiseData: CreateFranchiseData = {
         name: franchiseName.trim(),
         email: email.trim().toLowerCase(),
@@ -234,6 +258,7 @@ export default function AddFranchise() {
         adresse: adresse.trim(),
         latitude: latitudeNum,
         longitude: longitudeNum,
+        location_name: finalLocationName,
         commune_id: parsedCommuneId,
         status: apiStatus,
       };
@@ -272,6 +297,7 @@ export default function AddFranchise() {
     setContact1("");
     setContact2("");
     setAdresse("");
+    setLocationName("");
     setCommuneId("");
     setStatus("");
     setLatitude(null);
@@ -425,19 +451,6 @@ export default function AddFranchise() {
                   />
                 </div>
 
-                {/* Adresse - pleine largeur */}
-                <div className="md:col-span-2">
-                  <Label htmlFor="franchise-adresse">
-                    Adresse <span className="text-error-500">*</span>
-                  </Label>
-                  <Input
-                    type="text"
-                    id="franchise-adresse"
-                    placeholder="Ex: CHU Angré, Cocody"
-                    value={adresse}
-                    onChange={(e) => setAdresse(e.target.value)}
-                  />
-                </div>
               </div>
 
               {/* Section Localisation */}
@@ -459,7 +472,7 @@ export default function AddFranchise() {
                   height="400px"
                 />
 
-                {/* Affichage des coordonnées */}
+                {/* Affichage des coordonnées et informations d'adresse */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="latitude">Latitude</Label>
@@ -469,6 +482,7 @@ export default function AddFranchise() {
                       placeholder="Sélectionnez un point sur la carte"
                       value={latitude !== null ? latitude.toFixed(6) : ""}
                       disabled
+                      className="bg-gray-50 dark:bg-gray-900"
                     />
                   </div>
                   <div>
@@ -479,8 +493,44 @@ export default function AddFranchise() {
                       placeholder="Sélectionnez un point sur la carte"
                       value={longitude !== null ? longitude.toFixed(6) : ""}
                       disabled
+                      className="bg-gray-50 dark:bg-gray-900"
                     />
                   </div>
+                  
+                  {/* Adresse - verrouillée et pré-remplie automatiquement */}
+                  <div className="md:col-span-2">
+                    <Label htmlFor="franchise-adresse">
+                      Adresse <span className="text-error-500">*</span>
+                    </Label>
+                    <Input
+                      type="text"
+                      id="franchise-adresse"
+                      placeholder="L'adresse sera détectée automatiquement depuis la carte"
+                      value={adresse}
+                      disabled
+                      className="bg-gray-50 dark:bg-gray-900"
+                    />
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      Cette adresse est automatiquement détectée depuis Google Maps lors de la sélection d'un emplacement
+                    </p>
+                  </div>
+                  
+                  {locationName && (
+                    <div className="md:col-span-2">
+                      <Label htmlFor="location-name">Localisation détectée</Label>
+                      <Input
+                        type="text"
+                        id="location-name"
+                        placeholder="La localisation sera détectée automatiquement"
+                        value={locationName}
+                        disabled
+                        className="bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700"
+                      />
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Cette information a été récupérée automatiquement depuis Google Maps
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 

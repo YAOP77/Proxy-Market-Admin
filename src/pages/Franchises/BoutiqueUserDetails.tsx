@@ -121,11 +121,7 @@ const BoutiqueUserDetails = () => {
           if (boutiqueData) {
             setBoutique(boutiqueData);
           }
-        } catch (boutiqueError) {
-          if (import.meta.env.DEV) {
-            const errorMessage = boutiqueError instanceof Error ? boutiqueError.message : "Erreur inconnue";
-            console.error("Erreur lors du chargement de la boutique:", errorMessage);
-          }
+        } catch {
           // Ne pas bloquer l'affichage si la boutique ne peut pas être chargée
         } finally {
           setIsLoadingBoutique(false);
@@ -146,11 +142,7 @@ const BoutiqueUserDetails = () => {
               setCommune(foundCommune);
             }
           }
-        } catch (communeError) {
-          if (import.meta.env.DEV) {
-            const errorMessage = communeError instanceof Error ? communeError.message : "Erreur inconnue";
-            console.error("Erreur lors du chargement de la commune:", errorMessage);
-          }
+        } catch {
           // Ne pas bloquer l'affichage si la commune ne peut pas être chargée
         } finally {
           setIsLoadingCommune(false);

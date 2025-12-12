@@ -297,6 +297,7 @@ export default function BoutiqueDetails() {
                   renderField("Contact secondaire", "—")
                 )}
                 {renderField("Adresse", boutique.adresse)}
+                {renderField("Localisation", boutique.location_name)}
                 {renderField("Commune", communeLabel)}
                 {renderField("Détails", boutique.details)}
               </div>

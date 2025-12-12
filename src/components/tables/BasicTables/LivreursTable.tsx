@@ -4,7 +4,7 @@
  * Affiche la liste des livreurs avec :
  * - Livreur (photo + nom + email)
  * - Contact
- * - Localisation
+ * - Rôle
  * - Statut
  */
 
@@ -106,13 +106,6 @@ export default function LivreursTable({ livreurs = [] }: LivreursTableProps) {
           )}
         </TableCell>
         <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-          {livreur.location ? (
-            <span className="text-gray-800 dark:text-white/90">{livreur.location}</span>
-          ) : (
-            "—"
-          )}
-        </TableCell>
-        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
           <Badge size="sm" color="warning" className="border border-orange-300 dark:border-orange-600">
             {livreur.role}
           </Badge>
@@ -121,7 +114,13 @@ export default function LivreursTable({ livreurs = [] }: LivreursTableProps) {
           <Badge
             size="sm"
             color={getStatusColor(livreur.status)}
-            className={livreur.status === "Actif" ? "border border-green-300 dark:border-green-600" : ""}
+            className={
+              livreur.status === "Actif"
+                ? "border border-green-300 dark:border-green-600"
+                : livreur.status === "Inactif"
+                ? "border border-red-300 dark:border-red-600"
+                : ""
+            }
           >
             {livreur.status}
           </Badge>
@@ -147,12 +146,6 @@ export default function LivreursTable({ livreurs = [] }: LivreursTableProps) {
               className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
             >
               Contact
-            </TableCell>
-            <TableCell
-              isHeader
-              className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-            >
-              Localisation
             </TableCell>
             <TableCell
               isHeader

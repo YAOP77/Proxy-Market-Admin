@@ -2,7 +2,8 @@
  * Composant GoogleMapPicker - Sélection de localisation sur Google Maps
  * 
  * Permet à l'utilisateur de cliquer sur une carte pour définir l'emplacement
- * et récupère automatiquement la longitude et la latitude.
+ * et récupère automatiquement la longitude, la latitude et les informations d'adresse
+ * via le Geocoding API de Google Maps.
  * 
  * Ce composant utilise le contexte GoogleMapsContext pour éviter le chargement
  * multiple de l'API Google Maps.
@@ -12,10 +13,33 @@ import { useState, useCallback, useMemo, useEffect } from "react";
 import { GoogleMap, Marker } from "@react-google-maps/api";
 import { useGoogleMaps } from "../../contexts/GoogleMapsContext";
 
+/**
+ * Interface pour les informations d'adresse retournées par le Geocoding API
+ */
+export interface LocationAddressInfo {
+  location_name?: string;
+  formatted_address?: string;
+  street_number?: string;
+  route?: string;
+  locality?: string;
+  administrative_area_level_1?: string;
+  country?: string;
+  postal_code?: string;
+}
+
+/**
+ * Interface pour les données complètes de localisation
+ */
+export interface LocationData {
+  lat: number;
+  lng: number;
+  address?: LocationAddressInfo;
+}
+
 interface GoogleMapPickerProps {
   latitude: number | null;
   longitude: number | null;
-  onLocationSelect: (lat: number, lng: number) => void;
+  onLocationSelect: (locationData: LocationData) => void;
   height?: string;
   className?: string;
 }
@@ -30,6 +54,7 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const { isLoaded, loadError: contextLoadError, googleMapsApiKey } = useGoogleMaps();
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [isGeocoding, setIsGeocoding] = useState(false);
 
   // Utiliser l'erreur du contexte ou une erreur locale
   const currentLoadError = loadError || contextLoadError;
@@ -233,30 +258,136 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
     [height]
   );
 
+  /**
+   * Effectue un reverse geocoding pour obtenir les informations d'adresse
+   */
+  const reverseGeocode = useCallback(
+    async (lat: number, lng: number): Promise<LocationAddressInfo | undefined> => {
+      if (!isApiAvailable || !window.google?.maps?.Geocoder) {
+        if (import.meta.env.DEV) {
+          console.warn("[GoogleMapPicker] Geocoder API not available");
+        }
+        return undefined;
+      }
+
+      try {
+        const geocoder = new window.google.maps.Geocoder();
+        const latlng = { lat, lng };
+
+        return new Promise<LocationAddressInfo | undefined>((resolve) => {
+          geocoder.geocode({ location: latlng }, (results, status) => {
+            if (status === "OK" && results && results.length > 0) {
+              const result = results[0];
+              const addressInfo: LocationAddressInfo = {
+                formatted_address: result.formatted_address,
+              };
+
+              // Extraire les composants d'adresse
+              if (result.address_components) {
+                result.address_components.forEach((component) => {
+                  const types = component.types;
+
+                  if (types.includes("street_number")) {
+                    addressInfo.street_number = component.long_name;
+                  }
+                  if (types.includes("route")) {
+                    addressInfo.route = component.long_name;
+                  }
+                  if (types.includes("locality")) {
+                    addressInfo.locality = component.long_name;
+                    // Utiliser locality comme location_name par défaut
+                    if (!addressInfo.location_name) {
+                      addressInfo.location_name = component.long_name;
+                    }
+                  }
+                  if (types.includes("administrative_area_level_1")) {
+                    addressInfo.administrative_area_level_1 = component.long_name;
+                  }
+                  if (types.includes("country")) {
+                    addressInfo.country = component.long_name;
+                  }
+                  if (types.includes("postal_code")) {
+                    addressInfo.postal_code = component.long_name;
+                  }
+                });
+              }
+
+              // Si pas de location_name trouvé, utiliser formatted_address
+              if (!addressInfo.location_name && addressInfo.formatted_address) {
+                // Extraire le nom de la localité depuis formatted_address
+                const parts = addressInfo.formatted_address.split(",");
+                if (parts.length > 0) {
+                  addressInfo.location_name = parts[0].trim();
+                } else {
+                  addressInfo.location_name = addressInfo.formatted_address;
+                }
+              }
+
+              resolve(addressInfo);
+            } else if (status === "ZERO_RESULTS") {
+              if (import.meta.env.DEV) {
+                console.warn("[GoogleMapPicker] No geocoding results found");
+              }
+              resolve(undefined);
+            } else {
+              if (import.meta.env.DEV) {
+                console.warn(`[GoogleMapPicker] Geocoding failed: ${status}`);
+              }
+              resolve(undefined);
+            }
+          });
+        });
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.error("[GoogleMapPicker] Geocoding error:", error);
+        }
+        return undefined;
+      }
+    },
+    [isApiAvailable]
+  );
+
   const onMapClick = useCallback(
-    (e: google.maps.MapMouseEvent) => {
+    async (e: google.maps.MapMouseEvent) => {
       if (e.latLng) {
         const lat = e.latLng.lat();
         const lng = e.latLng.lng();
-        onLocationSelect(lat, lng);
+
+        // Appeler immédiatement avec les coordonnées
+        const locationData: LocationData = {
+          lat,
+          lng,
+        };
+
+        // Essayer de récupérer les informations d'adresse en arrière-plan
+        setIsGeocoding(true);
+        try {
+          const addressInfo = await reverseGeocode(lat, lng);
+          if (addressInfo) {
+            locationData.address = addressInfo;
+          }
+        } catch (error) {
+          if (import.meta.env.DEV) {
+            console.error("[GoogleMapPicker] Error during geocoding:", error);
+          }
+        } finally {
+          setIsGeocoding(false);
+        }
+
+        // Appeler le callback avec les données complètes
+        onLocationSelect(locationData);
       }
     },
-    [onLocationSelect]
+    [onLocationSelect, reverseGeocode]
   );
 
   const onLoad = useCallback(() => {
     setIsMapLoaded(true);
     setLoadError(null);
-    if (import.meta.env.DEV) {
-      console.log('[GoogleMapPicker] Map loaded successfully');
-    }
   }, []);
 
   const onUnmount = useCallback(() => {
     setIsMapLoaded(false);
-    if (import.meta.env.DEV) {
-      console.log('[GoogleMapPicker] Map unmounted');
-    }
   }, []);
 
   // Si l'API est disponible mais que isMapLoaded est false après un délai, forcer l'affichage
@@ -264,9 +395,6 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
     if (isLoaded && isApiAvailable && !isMapLoaded) {
       const timeout = setTimeout(() => {
         if (!isMapLoaded && window.google?.maps) {
-          if (import.meta.env.DEV) {
-            console.log('[GoogleMapPicker] Forcing map display after timeout');
-          }
           setIsMapLoaded(true);
         }
       }, 3000); // Attendre 3 secondes avant de forcer
@@ -284,18 +412,12 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
       
       // Si l'API était disponible mais ne l'est plus, définir une erreur
       if (isApiAvailable && !apiStillAvailable && isMapLoaded) {
-        if (import.meta.env.DEV) {
-          console.error('[GoogleMapPicker] API became unavailable after initial load');
-        }
         setLoadError("LoadError");
         setIsMapLoaded(false);
       }
       
       // Si l'API devient disponible après une erreur, réinitialiser
       if (!isApiAvailable && apiStillAvailable && currentLoadError) {
-        if (import.meta.env.DEV) {
-          console.log('[GoogleMapPicker] API became available, clearing error');
-        }
         setLoadError(null);
       }
     }, 2000);
@@ -320,9 +442,6 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
       if (typeof window !== "undefined" && window.google && window.google.maps) {
         setLoadError(null);
         clearInterval(checkInterval);
-        if (import.meta.env.DEV) {
-          console.log('[GoogleMapPicker] API is now available after', checkCount * 500, 'ms');
-        }
       }
     }, 500);
 
@@ -331,11 +450,6 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
       clearInterval(checkInterval);
       if (!isApiAvailable && !currentLoadError) {
         // Si après 30 secondes l'API n'est toujours pas disponible, définir une erreur générique
-        if (import.meta.env.DEV) {
-          console.error('[GoogleMapPicker] Timeout: API not available after 30 seconds');
-          console.error('[GoogleMapPicker] isLoaded:', isLoaded, 'isApiAvailable:', isApiAvailable);
-          console.error('[GoogleMapPicker] contextLoadError:', contextLoadError);
-        }
         setLoadError("LoadError");
       }
     }, 30000);
@@ -416,19 +530,6 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
   const isLoading = !canDisplayMap || (!isMapLoaded && !currentLoadError);
   const shouldShowError = currentLoadError && (!isMapLoaded || !isApiAvailable);
   
-  // Log pour le débogage
-  useEffect(() => {
-    if (import.meta.env.DEV) {
-      console.log('[GoogleMapPicker] State:', {
-        isLoaded,
-        isApiAvailable,
-        isMapLoaded,
-        canDisplayMap,
-        currentLoadError,
-        isLoading
-      });
-    }
-  }, [isLoaded, isApiAvailable, isMapLoaded, canDisplayMap, currentLoadError, isLoading]);
 
   return (
     <div className={`relative rounded-lg border border-gray-300 overflow-hidden dark:border-gray-700 ${className}`}>
@@ -438,6 +539,12 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#04b05d] border-t-transparent mx-auto mb-2" />
             <p className="text-sm text-gray-500 dark:text-gray-400">Chargement de la carte...</p>
           </div>
+        </div>
+      )}
+      {isGeocoding && (
+        <div className="absolute top-2 right-2 z-20 flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 shadow-md">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#04b05d] border-t-transparent" />
+          <p className="text-xs text-gray-600 dark:text-gray-300">Récupération de l'adresse...</p>
         </div>
       )}
       {canDisplayMap ? (

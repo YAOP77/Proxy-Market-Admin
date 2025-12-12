@@ -80,9 +80,6 @@ async function getCategories(): Promise<Category[]> {
 
     return [];
   } catch (error: unknown) {
-    if (import.meta.env.DEV) {
-      console.error("[BannerService] Erreur lors de la récupération des catégories");
-    }
 
     if (error instanceof Error) {
       throw new Error(error.message || "Erreur lors de la récupération des catégories");
@@ -270,9 +267,6 @@ async function getBanners(page: number = 1, search?: string): Promise<BannersRes
       },
     };
   } catch (error: unknown) {
-    if (import.meta.env.DEV) {
-      console.error("[BannerService] Erreur lors de la recuperation des bannieres");
-    }
 
     if (error instanceof Error) {
       throw new Error(error.message || "Erreur lors de la recuperation des bannieres");

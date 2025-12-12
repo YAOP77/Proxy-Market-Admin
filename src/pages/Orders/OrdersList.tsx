@@ -79,10 +79,10 @@ const getStatusStyles = (statusText: string, statusBg: string): { color: "succes
   }
   
   // Commande annulée -> error (rouge)
-  if (statusBg === "danger" || lowerText.includes("annulée") || lowerText.includes("annulee")) {
+  if (statusBg === "danger" || lowerText.includes("annulée") || lowerText.includes("annulee") || lowerText.includes("inactif") || lowerText.includes("inactive")) {
     return {
       color: "error",
-      className: "border border-red-300 dark:border-red-600",
+      className: "bg-red-100 text-red-600 border border-red-300 dark:bg-red-500/15 dark:text-red-400 dark:border-red-600",
     };
   }
   

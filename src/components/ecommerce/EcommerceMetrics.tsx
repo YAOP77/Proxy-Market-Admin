@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import {
   BoxIcon,
   GroupIcon,
@@ -10,16 +11,17 @@ import reportService, { ReportsData } from "../../services/api/reportService";
 
 /**
  * Composant EcommerceMetrics - Métriques principales du tableau de bord
- *
+ * 
  * Affiche les métriques clés sous forme de cartes :
  * - Clients : nombre total de clients
  * - Boutiques : nombre total de boutiques
  * - Produits : nombre total de produits
  * - Livreurs : nombre total de livreurs
- *
+ * 
  * Les valeurs sont animées de 0 à leur valeur finale lors du montage du composant.
  */
 export default function EcommerceMetrics() {
+  const navigate = useNavigate();
   const [reportsData, setReportsData] = useState<ReportsData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
@@ -85,7 +87,10 @@ export default function EcommerceMetrics() {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 md:gap-6">
       {/* <!-- Metric Item Start - Clients --> */}
-      <div className="group rounded-2xl border border-neutral-300 bg-white p-5 transition-all duration-300 hover:border-[#04b05d] dark:border-neutral-400 dark:bg-white/[0.03] dark:hover:border-[#04b05d] md:p-6">
+      <div 
+        onClick={() => navigate("/statistics?section=clients")}
+        className="group rounded-2xl border border-neutral-300 bg-white p-5 transition-all duration-300 hover:border-[#04b05d] dark:border-neutral-400 dark:bg-white/[0.03] dark:hover:border-[#04b05d] md:p-6 cursor-pointer"
+      >
         <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#04b05d]/10 transition-colors duration-300 group-hover:bg-[#04b05d]/20 dark:bg-[#04b05d]/20">
           <GroupIcon className="text-[#04b05d] size-6 dark:text-[#04b05d]" />
         </div>
@@ -104,7 +109,10 @@ export default function EcommerceMetrics() {
       {/* <!-- Metric Item End --> */}
 
       {/* <!-- Metric Item Start - Boutiques --> */}
-      <div className="group rounded-2xl border border-neutral-300 bg-white p-5 transition-all duration-300 hover:border-[#04b05d] dark:border-neutral-400 dark:bg-white/[0.03] dark:hover:border-[#04b05d] md:p-6">
+      <div 
+        onClick={() => navigate("/statistics?section=boutiques")}
+        className="group rounded-2xl border border-neutral-300 bg-white p-5 transition-all duration-300 hover:border-[#04b05d] dark:border-neutral-400 dark:bg-white/[0.03] dark:hover:border-[#04b05d] md:p-6 cursor-pointer"
+      >
         <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#04b05d]/10 transition-colors duration-300 group-hover:bg-[#04b05d]/20 dark:bg-[#04b05d]/20">
           <TableIcon className="text-[#04b05d] size-6 dark:text-[#04b05d]" />
         </div>
@@ -122,7 +130,10 @@ export default function EcommerceMetrics() {
       {/* <!-- Metric Item End --> */}
 
       {/* <!-- Metric Item Start - Produits --> */}
-      <div className="group rounded-2xl border border-neutral-300 bg-white p-5 transition-all duration-300 hover:border-[#04b05d] dark:border-neutral-400 dark:bg-white/[0.03] dark:hover:border-[#04b05d] md:p-6">
+      <div 
+        onClick={() => navigate("/statistics?section=produits")}
+        className="group rounded-2xl border border-neutral-300 bg-white p-5 transition-all duration-300 hover:border-[#04b05d] dark:border-neutral-400 dark:bg-white/[0.03] dark:hover:border-[#04b05d] md:p-6 cursor-pointer"
+      >
         <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#04b05d]/10 transition-colors duration-300 group-hover:bg-[#04b05d]/20 dark:bg-[#04b05d]/20">
           <BoxIcon className="text-[#04b05d] size-6 dark:text-[#04b05d]" />
         </div>
@@ -140,7 +151,10 @@ export default function EcommerceMetrics() {
       {/* <!-- Metric Item End --> */}
 
       {/* <!-- Metric Item Start - Livreurs --> */}
-      <div className="group rounded-2xl border border-neutral-300 bg-white p-5 transition-all duration-300 hover:border-[#04b05d] dark:border-neutral-400 dark:bg-white/[0.03] dark:hover:border-[#04b05d] md:p-6">
+      <div 
+        onClick={() => navigate("/statistics?section=livreurs")}
+        className="group rounded-2xl border border-neutral-300 bg-white p-5 transition-all duration-300 hover:border-[#04b05d] dark:border-neutral-400 dark:bg-white/[0.03] dark:hover:border-[#04b05d] md:p-6 cursor-pointer"
+      >
         <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#04b05d]/10 transition-colors duration-300 group-hover:bg-[#04b05d]/20 dark:bg-[#04b05d]/20">
           <UserCircleIcon className="text-[#04b05d] size-6 dark:text-[#04b05d]" />
         </div>
