@@ -215,9 +215,18 @@ export default function StatisticsChart() {
       tooltip: {
         enabled: true,
         y: {
-          formatter: (val: number) => {
-            if (val === 0) return "0 FCFA";
-            return `${val.toLocaleString("fr-FR")} FCFA`;
+          formatter: (val: number, { seriesIndex }: { seriesIndex: number }) => {
+            // Série 0 = Ventes (nombre de commandes, pas de FCFA)
+            // Série 1 = Revenus (montant, avec FCFA)
+            if (seriesIndex === 0) {
+              // Ventes : afficher juste le nombre
+              if (val === 0) return "0";
+              return val.toLocaleString("fr-FR");
+            } else {
+              // Revenus : afficher avec FCFA
+              if (val === 0) return "0 FCFA";
+              return `${val.toLocaleString("fr-FR")} FCFA`;
+            }
           },
         },
       },
