@@ -3,7 +3,7 @@ import { ApexOptions } from "apexcharts";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { MoreDotIcon } from "../../icons";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import reportService, { ReportsData } from "../../services/api/reportService";
 
 export default function MonthlySalesChart() {
@@ -22,7 +22,10 @@ export default function MonthlySalesChart() {
 
     loadReports();
   }, []);
-  const options: ApexOptions = {
+
+  // Mémoriser les options pour éviter les re-renders inutiles
+  const options: ApexOptions = useMemo(
+    () => ({
     colors: ["#04b05d"],
     chart: {
       fontFamily: "Outfit, sans-serif",
@@ -97,12 +100,24 @@ export default function MonthlySalesChart() {
         show: false,
       },
       y: {
-        formatter: (val: number) => `${val}`,
+        formatter: (val: number) => {
+          // Formater le nombre de ventes sans FCFA (c'est un nombre, pas un montant)
+          if (val === 0) return "0";
+          return val.toLocaleString("fr-FR");
+        },
       },
     },
-  };
-  // Calculer les données mensuelles basées strictement sur les valeurs de l'API
-  const getMonthlyData = (): number[] => {
+    }),
+    []
+  );
+
+  /**
+   * Calcule les données mensuelles en utilisant uniquement les valeurs réelles de l'API
+   * Utilise le nombre de commandes (commandemois, commandeMoisPasse) pour les ventes
+   * Affiche uniquement les mois avec des données réelles (mois actuel et mois passé)
+   * Les autres mois restent à 0 pour éviter toute estimation
+   */
+  const getMonthlyData = useMemo((): number[] => {
     if (!reportsData) {
       return [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     }
@@ -114,53 +129,38 @@ export default function MonthlySalesChart() {
     const monthlyData = new Array(12).fill(0);
 
     // Utiliser uniquement les valeurs réelles de l'API
-    const currentMonthTotal = reportsData.commandemois_soustotal || 0;
-    const lastMonthTotal = reportsData.commandeMoisPasse_soustotal || 0;
-    const yearTotal = reportsData.commandeannee_soustotal || 0;
+    // Ventes = nombre de commandes (pas le montant)
+    const currentMonthVentes = reportsData.commandemois || 0;
+    const lastMonthVentes = reportsData.commandeMoisPasse || 0;
 
-    // Mois actuel (mois en cours)
+    // Mois actuel (mois en cours) - Valeur réelle
     if (currentMonthIndex < 12) {
-      monthlyData[currentMonthIndex] = currentMonthTotal;
+      monthlyData[currentMonthIndex] = currentMonthVentes;
     }
 
-    // Mois passé (mois précédent)
+    // Mois passé (mois précédent) - Valeur réelle
     if (currentMonthIndex > 0) {
-      monthlyData[currentMonthIndex - 1] = lastMonthTotal;
+      monthlyData[currentMonthIndex - 1] = lastMonthVentes;
     } else {
       // Si on est en janvier (index 0), le mois passé est décembre (index 11)
-      monthlyData[11] = lastMonthTotal;
+      monthlyData[11] = lastMonthVentes;
     }
 
-    // Pour les autres mois, utiliser une répartition basée sur le total annuel
-    // seulement si on a des données réelles
-    if (yearTotal > 0) {
-      const knownMonthsTotal = currentMonthTotal + lastMonthTotal;
-      const remainingTotal = Math.max(0, yearTotal - knownMonthsTotal);
-      
-      // Répartir le reste sur les autres mois de manière égale
-      const monthsWithData = currentMonthIndex > 0 ? 2 : 1;
-      const otherMonths = 12 - monthsWithData;
-      
-      if (otherMonths > 0 && remainingTotal > 0) {
-        const avgPerMonth = Math.floor(remainingTotal / otherMonths);
-        for (let i = 0; i < 12; i++) {
-          // Ne pas écraser les mois avec données réelles
-          if (i !== currentMonthIndex && !(currentMonthIndex > 0 && i === currentMonthIndex - 1)) {
-            monthlyData[i] = avgPerMonth;
-          }
-        }
-      }
-    }
+    // Les autres mois restent à 0 car nous n'avons pas de données réelles pour eux
+    // Cela garantit que seules les valeurs réelles de l'API sont affichées
 
     return monthlyData;
-  };
+  }, [reportsData]);
 
-  const series = [
-    {
-      name: "Ventes",
-      data: getMonthlyData(),
-    },
-  ];
+  const series = useMemo(
+    () => [
+      {
+        name: "Ventes",
+        data: getMonthlyData,
+      },
+    ],
+    [getMonthlyData]
+  );
   const [isOpen, setIsOpen] = useState(false);
 
   function toggleDropdown() {

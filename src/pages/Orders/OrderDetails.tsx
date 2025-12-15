@@ -1,30 +1,33 @@
 /**
  * Page OrderDetails - Détails d'une commande
- *
+ * 
  * Affiche les détails complets d'une commande avec :
  * - Informations utilisateur (nom, numéro, localisation)
  * - Informations produit (quantité, image, prix, boutique)
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams } from "react-router";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
 import Badge from "../../components/ui/badge/Badge";
+import DeliveryTracking from "../../components/delivery/DeliveryTracking";
 import commandeService, { CommandeDetail } from "../../services/api/commandeService";
+import franchiseService, { Boutique } from "../../services/api/franchiseService";
+import { useGoogleMaps } from "../../contexts/GoogleMapsContext";
 
-/**
+  /**
  * Gère l'erreur de chargement d'image
- */
+   */
 const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>, fallback: string) => {
   const target = e.currentTarget;
   if (target.src !== fallback) {
     target.src = fallback;
-  }
-};
+    }
+  };
 
-/**
+  /**
  * Détermine les styles du badge selon le texte du statut
  */
 const getStatusStyles = (statusText: string, statusBg: string): { color: "success" | "warning" | "error" | "info"; className: string } => {
@@ -71,9 +74,12 @@ const getStatusStyles = (statusText: string, statusBg: string): { color: "succes
 
 export default function OrderDetails() {
   const { orderId } = useParams<{ orderId: string }>();
+  const { isLoaded: isGoogleMapsLoaded } = useGoogleMaps();
   const [orderData, setOrderData] = useState<CommandeDetail | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
+  const [boutique, setBoutique] = useState<Boutique | null>(null);
+  const [isLoadingBoutique, setIsLoadingBoutique] = useState<boolean>(false);
 
   useEffect(() => {
     const loadOrderDetails = async () => {
@@ -100,6 +106,51 @@ export default function OrderDetails() {
     loadOrderDetails();
   }, [orderId]);
 
+  // Charger la boutique associée à la commande
+  // Note: Pour l'instant, on récupère la première boutique disponible et on charge ses détails pour obtenir les coordonnées
+  // Dans un cas réel, l'API devrait retourner l'ID de la boutique dans les détails de la commande
+  useEffect(() => {
+    const loadBoutique = async () => {
+      // Ne pas charger si on a déjà une boutique ou si on n'a pas de données de commande
+      if (!orderData || boutique) {
+        return;
+      }
+
+      try {
+        setIsLoadingBoutique(true);
+        // Récupérer toutes les boutiques pour obtenir l'ID
+        const boutiques = await franchiseService.getAllBoutiques();
+        if (boutiques.length > 0) {
+          // Prendre la première boutique active
+          const activeBoutique = boutiques.find(b => b.status === 1) || boutiques[0];
+          
+          if (activeBoutique && activeBoutique.id) {
+            // Charger les détails complets de la boutique pour obtenir les coordonnées
+            // L'API retourne latitude et longitude dans les détails, pas dans la liste
+            try {
+              const boutiqueDetails = await franchiseService.getBoutiqueById(activeBoutique.id);
+              // Vérifier que la boutique a des coordonnées valides
+              if (boutiqueDetails.latitude && boutiqueDetails.longitude) {
+                setBoutique(boutiqueDetails);
+              } else {
+                // Si pas de coordonnées, utiliser la boutique de la liste quand même
+                setBoutique(activeBoutique);
+              }
+            } catch (detailError) {
+              // Si erreur lors du chargement des détails, utiliser la boutique de la liste
+              setBoutique(activeBoutique);
+            }
+          }
+        }
+      } catch (err) {
+        // Ignorer l'erreur silencieusement, on n'affichera pas l'estimation
+      } finally {
+        setIsLoadingBoutique(false);
+      }
+    };
+
+    loadBoutique();
+  }, [orderData, boutique]);
 
   // Construire le nom du client
   const clientName = orderData?.client
@@ -192,6 +243,68 @@ export default function OrderDetails() {
         titleClassName="text-[#04b05d] dark:text-[#04b05d]"
       />
 
+      {/* Estimation de livraison - Section dédiée en premier */}
+      {(() => {
+        // Vérifier que toutes les conditions sont remplies
+        const hasBoutique = boutique && boutique.latitude && boutique.longitude;
+        const hasDeliveryCoords = orderData.adresse_livraison?.latitude && orderData.adresse_livraison?.longitude;
+        
+        // Convertir et valider les coordonnées
+        const boutiqueLat = hasBoutique ? Number(boutique.latitude) : null;
+        const boutiqueLng = hasBoutique ? Number(boutique.longitude) : null;
+        const deliveryLat = hasDeliveryCoords ? Number(orderData.adresse_livraison.latitude) : null;
+        const deliveryLng = hasDeliveryCoords ? Number(orderData.adresse_livraison.longitude) : null;
+        
+        const isValidBoutique = boutiqueLat !== null && !isNaN(boutiqueLat) && boutiqueLng !== null && !isNaN(boutiqueLng);
+        const isValidDelivery = deliveryLat !== null && !isNaN(deliveryLat) && deliveryLng !== null && !isNaN(deliveryLng);
+        
+        // Déterminer la date de livraison réelle (si la commande est livrée)
+        const isDelivered = orderData.status_text && (
+          orderData.status_text.toLowerCase().includes("livrée") || 
+          orderData.status_text.toLowerCase().includes("livree")
+        );
+        const deliveredAt = isDelivered && orderData.updated_at ? orderData.updated_at : null;
+        
+        if (isValidBoutique && isValidDelivery && isGoogleMapsLoaded) {
+          return (
+            <ComponentCard title="Estimation de livraison" className="mb-6">
+              <DeliveryTracking
+                origin={{
+                  latitude: boutiqueLat,
+                  longitude: boutiqueLng,
+                }}
+                destination={{
+                  latitude: deliveryLat,
+                  longitude: deliveryLng,
+                }}
+                originName={boutique.name}
+                destinationName={orderData.adresse_livraison.location_name || orderData.adresse_livraison.adresse || "Adresse de livraison"}
+                mode="driving"
+                orderStatus={orderData.status_text}
+                deliveredAt={deliveredAt}
+                orderId={orderData.id}
+      />
+            </ComponentCard>
+          );
+        }
+        
+        // Afficher un indicateur de chargement si la boutique n'est pas encore chargée
+        if (!boutique || !isValidBoutique || !isValidDelivery || !isGoogleMapsLoaded) {
+          return (
+            <ComponentCard title="Estimation de livraison" className="mb-6">
+              <div className="flex items-center justify-center gap-3 py-8">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#04b05d] border-t-transparent" />
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Chargement de l'estimation...
+                </p>
+              </div>
+            </ComponentCard>
+          );
+        }
+        
+        return null;
+      })()}
+      
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Informations client */}
         <ComponentCard title="Informations client">
@@ -293,13 +406,13 @@ export default function OrderDetails() {
                 <div>
                   <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
                     Coordonnées géographiques
-                  </label>
-                  <p className="mt-1 text-sm font-medium text-gray-800 dark:text-white/90">
+                </label>
+                <p className="mt-1 text-sm font-medium text-gray-800 dark:text-white/90">
                     {orderData.adresse_livraison.latitude && orderData.adresse_livraison.longitude
                       ? `${orderData.adresse_livraison.latitude}, ${orderData.adresse_livraison.longitude}`
                       : orderData.adresse_livraison.latitude || orderData.adresse_livraison.longitude || "—"}
-                  </p>
-                </div>
+                </p>
+              </div>
               )}
 
               {(orderData.adresse_livraison?.contact1 || orderData.adresse_livraison?.contact2) && (
@@ -335,18 +448,18 @@ export default function OrderDetails() {
         <div className="space-y-4">
           {/* Liste des produits de la commande */}
           {orderData.commande_details && orderData.commande_details.length > 0 ? (
-            <div className="space-y-4">
+          <div className="space-y-4">
               {orderData.commande_details.map((produit, index) => (
                 <div key={produit.id || index} className="flex items-start gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
                   <div className="w-16 h-16 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 flex-shrink-0">
-                    <img
+                <img
                       src={produit.photo || produit.photo_prymary || "/images/product/product-01.jpg"}
                       alt={produit.libelle}
-                      className="w-full h-full object-cover"
+                  className="w-full h-full object-cover"
                       onError={(e) => handleImageError(e, "/images/product/product-01.jpg")}
-                    />
-                  </div>
-                  <div className="flex-1">
+                />
+              </div>
+              <div className="flex-1">
                     <h4 className="text-sm font-semibold text-gray-800 dark:text-white/90">
                       {produit.libelle}
                     </h4>
@@ -372,8 +485,8 @@ export default function OrderDetails() {
                         <span>Total: <strong>{produit.total_prix}</strong></span>
                       )}
                     </div>
-                  </div>
-                </div>
+              </div>
+            </div>
               ))}
             </div>
           ) : (
@@ -381,15 +494,15 @@ export default function OrderDetails() {
           )}
 
           {/* Récapitulatif des prix */}
-          <div className="space-y-3 pt-4 border-t border-gray-100 dark:border-gray-800">
-            <div className="flex justify-between items-center">
-              <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+            <div className="space-y-3 pt-4 border-t border-gray-100 dark:border-gray-800">
+              <div className="flex justify-between items-center">
+                <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
                 Quantité totale
-              </label>
-              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                </label>
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                 {orderData.quantite}
-              </p>
-            </div>
+                </p>
+              </div>
 
             {orderData.soustotal && (
               <div className="flex justify-between items-center">
@@ -413,17 +526,17 @@ export default function OrderDetails() {
               </div>
             )}
 
-            <div className="flex justify-between items-center pt-3 border-t-2 border-gray-200 dark:border-gray-700">
-              <label className="text-base font-bold text-gray-800 dark:text-white/90">
-                Total
-              </label>
+              <div className="flex justify-between items-center pt-3 border-t-2 border-gray-200 dark:border-gray-700">
+                <label className="text-base font-bold text-gray-800 dark:text-white/90">
+                  Total
+                </label>
               <p className="text-xl font-bold text-[#04b05d] dark:text-[#04b05d]">
                 {orderData.total}
-              </p>
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      </ComponentCard>
+        </ComponentCard>
 
       {/* Informations complémentaires */}
       <ComponentCard title="Informations de commande" className="mt-6">
@@ -547,8 +660,8 @@ export default function OrderDetails() {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}
-              </p>
-            </div>
+            </p>
+          </div>
           )}
         </div>
       </ComponentCard>

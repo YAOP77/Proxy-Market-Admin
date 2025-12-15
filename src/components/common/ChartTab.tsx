@@ -1,11 +1,27 @@
 import { useState } from "react";
 
-const ChartTab: React.FC = () => {
-  const [selected, setSelected] = useState<
-    "optionOne" | "optionTwo" | "optionThree"
-  >("optionOne");
+export type ChartPeriod = "monthly" | "quarterly" | "annually";
 
-  const getButtonClass = (option: "optionOne" | "optionTwo" | "optionThree") =>
+interface ChartTabProps {
+  selected?: ChartPeriod;
+  onPeriodChange?: (period: ChartPeriod) => void;
+}
+
+const ChartTab: React.FC<ChartTabProps> = ({ selected: externalSelected, onPeriodChange }) => {
+  const [internalSelected, setInternalSelected] = useState<ChartPeriod>("monthly");
+  
+  // Utiliser la sélection externe si fournie, sinon utiliser la sélection interne
+  const selected = externalSelected ?? internalSelected;
+
+  const handleSelection = (period: ChartPeriod) => {
+    if (onPeriodChange) {
+      onPeriodChange(period);
+    } else {
+      setInternalSelected(period);
+    }
+  };
+
+  const getButtonClass = (option: ChartPeriod) =>
     selected === option
       ? "shadow-theme-xs text-gray-900 dark:text-white bg-white dark:bg-gray-800"
       : "text-gray-500 dark:text-gray-400";
@@ -13,27 +29,27 @@ const ChartTab: React.FC = () => {
   return (
     <div className="flex items-center gap-0.5 rounded-lg bg-gray-100 p-0.5 dark:bg-gray-900">
       <button
-        onClick={() => setSelected("optionOne")}
-        className={`px-3 py-2 font-medium w-full rounded-md text-theme-sm hover:text-gray-900   dark:hover:text-white ${getButtonClass(
-          "optionOne"
+        onClick={() => handleSelection("monthly")}
+        className={`px-3 py-2 font-medium w-full rounded-md text-theme-sm hover:text-gray-900 dark:hover:text-white ${getButtonClass(
+          "monthly"
         )}`}
       >
         Monthly
       </button>
 
       <button
-        onClick={() => setSelected("optionTwo")}
-        className={`px-3 py-2 font-medium w-full rounded-md text-theme-sm hover:text-gray-900   dark:hover:text-white ${getButtonClass(
-          "optionTwo"
+        onClick={() => handleSelection("quarterly")}
+        className={`px-3 py-2 font-medium w-full rounded-md text-theme-sm hover:text-gray-900 dark:hover:text-white ${getButtonClass(
+          "quarterly"
         )}`}
       >
         Quarterly
       </button>
 
       <button
-        onClick={() => setSelected("optionThree")}
-        className={`px-3 py-2 font-medium w-full rounded-md text-theme-sm hover:text-gray-900   dark:hover:text-white ${getButtonClass(
-          "optionThree"
+        onClick={() => handleSelection("annually")}
+        className={`px-3 py-2 font-medium w-full rounded-md text-theme-sm hover:text-gray-900 dark:hover:text-white ${getButtonClass(
+          "annually"
         )}`}
       >
         Annually

@@ -1,12 +1,12 @@
 /**
  * Page OrdersList - Liste des commandes
- *
+ * 
  * Affiche toutes les commandes avec leurs statuts
  * Chaque commande est cliquable pour voir les détails
  * avec pagination et recherche intégrée
  */
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
@@ -276,122 +276,291 @@ export default function OrdersList() {
     });
   }, [commandes]);
 
-  const tableContent = useMemo(() => {
-    return orders.map((order) => (
-      <TableRow
-        key={order.id}
-        className="cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5"
-        onClick={() => navigate(`/order/${order.id}`)}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            navigate(`/order/${order.id}`);
-          }
-        }}
-      >
-        {/* Numéro Commande */}
-        <TableCell className="px-5 py-4 sm:px-6 text-start">
-          <span className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
-            #{order.orderNumber}
-          </span>
-        </TableCell>
+  // Fonction pour obtenir le statut de groupe d'une commande
+  const getOrderGroupStatus = (order: Order): string => {
+    const lowerStatus = (order.statusText || order.status || "").toLowerCase();
+    
+    if (lowerStatus.includes("livrée") || lowerStatus.includes("livree")) {
+      return "livrée";
+    }
+    if (lowerStatus.includes("livraison") && !lowerStatus.includes("livrée") && !lowerStatus.includes("livree")) {
+      return "en_livraison";
+    }
+    if (lowerStatus.includes("préparation") || lowerStatus.includes("preparation")) {
+      return "en_préparation";
+    }
+    if (lowerStatus.includes("payée") || lowerStatus.includes("payee")) {
+      return "payée";
+    }
+    if (lowerStatus.includes("attente") && lowerStatus.includes("paiement")) {
+      return "en_attente_paiement";
+    }
+    if (lowerStatus.includes("annulée") || lowerStatus.includes("annulee") || lowerStatus.includes("annulé") || lowerStatus.includes("annule")) {
+      return "annulée";
+    }
+    return "autre";
+  };
 
-        {/* Client */}
-        <TableCell className="px-5 py-4 sm:px-6 text-start">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 overflow-hidden rounded-full">
-              <img
-                width={40}
-                height={40}
-                src={order.user.image}
-                alt={order.user.name}
-                className="w-full h-full object-cover"
-                onError={handleImageError}
-              />
-            </div>
-            <div>
-              <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                {order.user.name}
+  // Grouper les commandes par statut
+  const groupedOrders = useMemo(() => {
+    const groups: Record<string, Order[]> = {
+      en_attente_paiement: [],
+      payée: [],
+      en_préparation: [],
+      en_livraison: [],
+      livrée: [],
+      annulée: [],
+      autre: [],
+    };
+
+    orders.forEach((order) => {
+      const groupStatus = getOrderGroupStatus(order);
+      if (groups[groupStatus]) {
+        groups[groupStatus].push(order);
+      } else {
+        groups.autre.push(order);
+      }
+    });
+
+    return groups;
+  }, [orders]);
+
+  // Fonction pour obtenir le libellé d'une section
+  const getSectionLabel = (status: string): string => {
+    const labels: Record<string, string> = {
+      en_attente_paiement: "En attente de paiement",
+      payée: "Commandes payées",
+      en_préparation: "En préparation",
+      en_livraison: "En livraison",
+      livrée: "Commandes livrées",
+      annulée: "Commandes annulées",
+      autre: "Autres",
+    };
+    return labels[status] || status;
+  };
+
+  // Fonction pour obtenir la couleur d'une section
+  const getSectionColor = (status: string): string => {
+    const colors: Record<string, string> = {
+      en_attente_paiement: "yellow",
+      payée: "blue",
+      en_préparation: "orange",
+      en_livraison: "orange",
+      livrée: "green",
+      annulée: "red",
+      autre: "gray",
+    };
+    return colors[status] || "gray";
+  };
+
+  // Fonction pour rendre une ligne de commande
+  const renderOrderRow = useCallback((order: Order) => (
+    <TableRow
+                    key={order.id}
+      className="cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5"
+      onClick={() => navigate(`/order/${order.id}`)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          navigate(`/order/${order.id}`);
+        }
+      }}
+    >
+      {/* Numéro Commande */}
+      <TableCell className="px-5 py-4 sm:px-6 text-start">
+        <span className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+          #{order.orderNumber}
+        </span>
+      </TableCell>
+
+      {/* Client */}
+      <TableCell className="px-5 py-4 sm:px-6 text-start">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 overflow-hidden rounded-full">
+                          <img
+                            width={40}
+                            height={40}
+                            src={order.user.image}
+                            alt={order.user.name}
+                            className="w-full h-full object-cover"
+              onError={handleImageError}
+                          />
+                        </div>
+          <div>
+            <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                          {order.user.name}
+            </span>
+            {order.user.contact && (
+              <span className="block text-xs text-gray-500 dark:text-gray-400">
+                {order.user.contact}
               </span>
-              {order.user.contact && (
-                <span className="block text-xs text-gray-500 dark:text-gray-400">
-                  {order.user.contact}
-                </span>
-              )}
-            </div>
-          </div>
-        </TableCell>
-
-        {/* Produit */}
-        <TableCell className="px-4 py-3 text-start">
-          <div className="flex items-center gap-2">
-            {order.product.image && (
-              <div className="w-8 h-8 overflow-hidden rounded-lg border border-gray-200 dark:border-white/10 flex-shrink-0">
-                <img
-                  src={order.product.image}
-                  alt={order.product.name}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = "none";
-                  }}
-                />
-              </div>
             )}
-            <div className="inline-block text-xs text-neutral-400 border border-neutral-400 bg-neutral-100 dark:bg-neutral-800 dark:border-neutral-600 dark:text-neutral-400 rounded-full px-2 py-1">
-              {order.product.name}
-              <span className="text-neutral-400 dark:text-neutral-500 ml-1">
-                (x{order.product.quantity})
-              </span>
-            </div>
           </div>
-        </TableCell>
+        </div>
+      </TableCell>
 
-        {/* Localisation */}
-        <TableCell className="px-4 py-3 text-start">
-          <span className="inline-block text-xs text-neutral-400 border border-neutral-400 bg-neutral-100 dark:bg-neutral-800 dark:border-neutral-600 dark:text-neutral-400 rounded-full px-2 py-1">
-            {order.deliveryLocation}
-          </span>
-        </TableCell>
+      {/* Produit */}
+      <TableCell className="px-4 py-3 text-start">
+        <div className="flex items-center gap-2">
+          {order.product.image && (
+            <div className="w-8 h-8 overflow-hidden rounded-lg border border-gray-200 dark:border-white/10 flex-shrink-0">
+              <img
+                src={order.product.image}
+                alt={order.product.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+                      </div>
+          )}
+          <div className="inline-block text-xs text-neutral-400 border border-neutral-400 bg-neutral-100 dark:bg-neutral-800 dark:border-neutral-600 dark:text-neutral-400 rounded-full px-2 py-1">
+                        {order.product.name}
+            <span className="text-neutral-400 dark:text-neutral-500 ml-1">
+                          (x{order.product.quantity})
+                        </span>
+          </div>
+        </div>
+      </TableCell>
 
-        {/* Total */}
-        <TableCell className="px-4 py-3 text-gray-800 text-start text-theme-sm dark:text-white/90 font-medium">
-          {order.totalFormatted || formatPrice(order.total)}
-        </TableCell>
+      {/* Localisation */}
+      <TableCell className="px-4 py-3 text-start">
+        <span className="inline-block text-xs text-neutral-400 border border-neutral-400 bg-neutral-100 dark:bg-neutral-800 dark:border-neutral-600 dark:text-neutral-400 rounded-full px-2 py-1">
+                        {order.deliveryLocation}
+        </span>
+      </TableCell>
 
-        {/* Statut */}
-        <TableCell className="px-4 py-3 text-start">
-          {(() => {
-            const styles = getStatusStyles(order.statusText || order.status, order.statusBg);
-            let displayStatus = order.statusText || order.status;
-            const lowerStatus = displayStatus.toLowerCase();
-            
-            // Remplacer "Commande en attente de traitement" ou "Commande en attente de paiement" par "En attente de paiement"
-            if ((lowerStatus.includes("attente") && lowerStatus.includes("traitement")) ||
-                (lowerStatus.includes("attente") && lowerStatus.includes("paiement"))) {
-              displayStatus = "En attente de paiement";
-            }
-            
-            // Remplacer "Commande en cour de préparation" par "Commande en préparation"
-            if (lowerStatus.includes("cour") && lowerStatus.includes("préparation")) {
-              displayStatus = "Commande en préparation";
-            }
-            
-            return (
+      {/* Total */}
+      <TableCell className="px-4 py-3 text-gray-800 text-start text-theme-sm dark:text-white/90 font-medium">
+        {order.totalFormatted || formatPrice(order.total)}
+      </TableCell>
+
+      {/* Statut */}
+      <TableCell className="px-4 py-3 text-start">
+        {(() => {
+          const styles = getStatusStyles(order.statusText || order.status, order.statusBg);
+          let displayStatus = order.statusText || order.status;
+          const lowerStatus = displayStatus.toLowerCase();
+          
+          // Remplacer "Commande en attente de traitement" ou "Commande en attente de paiement" par "En attente de paiement"
+          if ((lowerStatus.includes("attente") && lowerStatus.includes("traitement")) ||
+              (lowerStatus.includes("attente") && lowerStatus.includes("paiement"))) {
+            displayStatus = "En attente de paiement";
+          }
+          
+          // Remplacer "Commande en cour de préparation" par "Commande en préparation"
+          if (lowerStatus.includes("cour") && lowerStatus.includes("préparation")) {
+            displayStatus = "Commande en préparation";
+          }
+          
+          return (
+            <Badge
+              size="sm"
+              color={styles.color}
+              className={styles.className}
+            >
+              {displayStatus}
+            </Badge>
+          );
+        })()}
+      </TableCell>
+    </TableRow>
+  ), [navigate]);
+
+  // Ordre d'affichage des sections
+  const sectionOrder = [
+    "en_attente_paiement",
+    "payée",
+    "en_préparation",
+    "en_livraison",
+    "livrée",
+    "annulée",
+    "autre",
+  ];
+
+  // Contenu des sections groupées
+  const tableContent = useMemo(() => {
+    return sectionOrder.map((status) => {
+      const ordersInSection = groupedOrders[status];
+      if (ordersInSection.length === 0) {
+        return null;
+      }
+
+      const sectionColor = getSectionColor(status);
+      const sectionLabel = getSectionLabel(status);
+      const count = ordersInSection.length;
+
+      return (
+        <div key={status} className="mb-8 overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+          {/* En-tête de section */}
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-white/[0.02]">
+            <div className="flex items-center gap-3">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+                {sectionLabel}
+              </h3>
               <Badge
                 size="sm"
-                color={styles.color}
-                className={styles.className}
+                color={sectionColor as "success" | "warning" | "error" | "info"}
               >
-                {displayStatus}
-              </Badge>
-            );
-          })()}
-        </TableCell>
-      </TableRow>
-    ));
-  }, [orders, navigate]);
+                {count} {count === 1 ? "commande" : "commandes"}
+                      </Badge>
+            </div>
+          </div>
+
+          {/* Tableau pour cette section */}
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+                <TableRow>
+                  <TableCell
+                    isHeader
+                    className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  >
+                    N° Commande
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  >
+                    Client
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  >
+                    Produit
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  >
+                    Localisation
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  >
+                    Total
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  >
+                    Statut
+                  </TableCell>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                {ordersInSection.map((order) => renderOrderRow(order))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      );
+    }).filter(Boolean);
+  }, [groupedOrders, navigate, renderOrderRow]);
 
   if (isLoading) {
     return (
@@ -481,60 +650,14 @@ export default function OrdersList() {
       />
 
       <div className="space-y-6">
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-          <div className="max-w-full overflow-x-auto">
-            <Table>
-              {/* En-tête du tableau */}
-              <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
-                <TableRow>
-                  <TableCell
-                    isHeader
-                    className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                  >
-                    N° Commande
-                  </TableCell>
-                  <TableCell
-                    isHeader
-                    className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                  >
-                    Client
-                  </TableCell>
-                  <TableCell
-                    isHeader
-                    className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                  >
-                    Produit
-                  </TableCell>
-                  <TableCell
-                    isHeader
-                    className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                  >
-                    Localisation
-                  </TableCell>
-                  <TableCell
-                    isHeader
-                    className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                  >
-                    Total
-                  </TableCell>
-                  <TableCell
-                    isHeader
-                    className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                  >
-                    Statut
-                  </TableCell>
-                </TableRow>
-              </TableHeader>
+        {/* Sections groupées par statut */}
+        <div className="space-y-8">
+          {tableContent}
+        </div>
 
-              {/* Corps du tableau */}
-              <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                {tableContent}
-              </TableBody>
-            </Table>
-          </div>
-
-          {/* Pagination */}
-          {paginationMeta && paginationMeta.last_page > 1 && paginationMeta.total > 0 && (
+        {/* Pagination */}
+        {paginationMeta && paginationMeta.last_page > 1 && paginationMeta.total > 0 && (
+          <div className="mt-6">
             <Pagination
               currentPage={currentPage}
               totalPages={paginationMeta.last_page}
@@ -544,8 +667,8 @@ export default function OrdersList() {
               showingFrom={paginationMeta.from}
               showingTo={paginationMeta.to}
             />
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </>
   );

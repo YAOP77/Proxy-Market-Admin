@@ -38,6 +38,15 @@ export interface CreateFranchiseResponse {
 }
 
 /**
+ * Interface pour une commune (retournée dans la réponse API)
+ */
+export interface CommuneInfo {
+  id: number;
+  libelle: string;
+  [key: string]: any;
+}
+
+/**
  * Interface pour une boutique
  */
 export interface Boutique {
@@ -50,12 +59,16 @@ export interface Boutique {
   details: string | null;
   adresse: string;
   location_name: string | null;
-  localisation: string; // Format WKB/PostGIS
+  latitude: string | number; // Peut être string ou number selon l'API
+  longitude: string | number; // Peut être string ou number selon l'API
+  localisation?: string; // Format WKB/PostGIS (optionnel)
   commune_id: number;
-  created_by: string;
-  updated_by: string | null;
+  commune: CommuneInfo | null; // Commune complète retournée par l'API
+  created_by?: string;
+  updated_by?: string | null;
   status: number; // 0 = inactif, 1 = actif
-  deleted_at: string | null;
+  status_text?: string; // Texte formaté du statut (ex: "Actif", "Inactif")
+  deleted_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -333,17 +346,21 @@ const franchiseService = {
       // L'API peut retourner les données dans différentes structures
       const responseData = response.data as Record<string, unknown>;
       
-      // Si la réponse contient un objet boutique directement
+      // Cas 1 : Réponse avec wrapper { data: { ... } } (structure la plus courante)
+      if (responseData.data && typeof responseData.data === 'object' && !Array.isArray(responseData.data)) {
+        const boutiqueData = responseData.data as Record<string, unknown>;
+        // Vérifier que c'est bien un objet boutique (a un id)
+        if (boutiqueData.id) {
+          return boutiqueData as unknown as Boutique;
+        }
+      }
+      
+      // Cas 2 : Réponse avec { boutique: { ... } }
       if (responseData.boutique && typeof responseData.boutique === 'object') {
         return responseData.boutique as unknown as Boutique;
       }
       
-      // Si la réponse contient un objet data avec la boutique
-      if (responseData.data && typeof responseData.data === 'object') {
-        return responseData.data as unknown as Boutique;
-      }
-      
-      // Si la réponse est directement l'objet boutique
+      // Cas 3 : Réponse directement l'objet boutique
       if (responseData.id && typeof responseData.id === 'string') {
         return responseData as unknown as Boutique;
       }

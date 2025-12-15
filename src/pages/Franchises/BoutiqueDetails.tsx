@@ -36,11 +36,25 @@ const getStatusColor = (status: number): "success" | "error" => {
 
 /**
  * Formate une date en format lisible
+ * Si la date est déjà formatée (ex: "12 décembre 2025", "Non modifié"), on la retourne telle quelle
  */
 const formatDate = (dateValue?: string | null): string => {
-  if (!dateValue) {
+  if (!dateValue || dateValue.trim() === "") {
     return "—";
   }
+  
+  // Si la date contient des mots français (déjà formatée par l'API), la retourner telle quelle
+  const frenchDateKeywords = ["janvier", "février", "mars", "avril", "mai", "juin", 
+    "juillet", "août", "septembre", "octobre", "novembre", "décembre", "modifié", "Non"];
+  const isAlreadyFormatted = frenchDateKeywords.some(keyword => 
+    dateValue.toLowerCase().includes(keyword.toLowerCase())
+  );
+  
+  if (isAlreadyFormatted) {
+    return dateValue;
+  }
+  
+  // Sinon, essayer de parser la date
   const parsed = new Date(dateValue);
   if (Number.isNaN(parsed.getTime())) {
     return dateValue;
@@ -109,7 +123,8 @@ export default function BoutiqueDetails() {
 
   const statusLabel = useMemo(() => {
     if (!boutique) return "Non défini";
-    return getStatusLabel(boutique.status);
+    // Utiliser status_text de l'API si disponible, sinon formater manuellement
+    return boutique.status_text || getStatusLabel(boutique.status);
   }, [boutique]);
 
   const statusColor = useMemo(() => {
@@ -118,18 +133,25 @@ export default function BoutiqueDetails() {
   }, [boutique]);
 
   const communeLabel = useMemo(() => {
-    if (!boutique?.commune_id) {
+    if (!boutique) {
       return "—";
     }
 
-    // Chercher le nom de la commune dans la liste chargée
+    // Priorité 1 : Utiliser l'objet commune retourné par l'API si disponible
+    if (boutique.commune && typeof boutique.commune === 'object' && 'libelle' in boutique.commune) {
+      return boutique.commune.libelle;
+    }
+
+    // Priorité 2 : Chercher le nom de la commune dans la liste chargée
+    if (boutique.commune_id) {
     const commune = communes.find((c) => c.id === boutique.commune_id);
     if (commune) {
       return commune.libelle;
+      }
     }
 
-    // Si la commune n'est pas trouvée, afficher l'ID
-    return String(boutique.commune_id);
+    // Priorité 3 : Si la commune n'est pas trouvée, afficher l'ID ou "—"
+    return boutique.commune_id ? String(boutique.commune_id) : "—";
   }, [boutique, communes]);
 
   const handleOpenEditModal = () => {
@@ -298,8 +320,28 @@ export default function BoutiqueDetails() {
                 )}
                 {renderField("Adresse", boutique.adresse)}
                 {renderField("Localisation", boutique.location_name)}
-                {renderField("Commune", communeLabel)}
-                {renderField("Détails", boutique.details)}
+                {renderField("Commune", boutique.commune?.libelle || communeLabel)}
+                {boutique.latitude && boutique.longitude ? (
+                  <div>
+                    <p className="mb-1.5 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                      Latitude
+                    </p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                      {String(boutique.latitude)}
+                    </p>
+                  </div>
+                ) : null}
+                {boutique.latitude && boutique.longitude ? (
+                  <div>
+                    <p className="mb-1.5 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                      Longitude
+                    </p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                      {String(boutique.longitude)}
+                    </p>
+                  </div>
+                ) : null}
+                {boutique.details ? renderField("Détails", boutique.details) : null}
               </div>
 
               {/* Suivi du compte */}

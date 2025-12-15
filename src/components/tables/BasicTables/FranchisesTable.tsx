@@ -69,14 +69,13 @@ export default function FranchisesTable({ boutiques, onAddFranchise }: Franchise
           </div>
         </TableCell>
         <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-          <div className="inline-block text-xs text-yellow-500 border border-yellow-300 bg-yellow-50 dark:border-yellow-600 dark:bg-yellow-900/20 rounded-full px-1.5 py-1">
-          {boutique.contact_1}
-          {boutique.contact_2 && (
-              <span className="block text-xs text-gray-600 dark:text-yellow-200/80">
-              {boutique.contact_2}
-            </span>
+          {boutique.contact_1 ? (
+            <div className="inline-block text-xs text-yellow-500 border border-yellow-300 bg-yellow-50 dark:border-yellow-600 dark:bg-yellow-900/20 rounded-full px-1.5 py-1">
+              {boutique.contact_1}
+            </div>
+          ) : (
+            <span className="text-gray-400 dark:text-gray-500">—</span>
           )}
-          </div>
         </TableCell>
         <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
           {boutique.adresse}
