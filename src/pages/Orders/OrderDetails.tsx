@@ -6,7 +6,7 @@
  * - Informations produit (quantité, image, prix, boutique)
  */
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
@@ -79,7 +79,6 @@ export default function OrderDetails() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
   const [boutique, setBoutique] = useState<Boutique | null>(null);
-  const [isLoadingBoutique, setIsLoadingBoutique] = useState<boolean>(false);
 
   useEffect(() => {
     const loadOrderDetails = async () => {
@@ -117,7 +116,6 @@ export default function OrderDetails() {
       }
 
       try {
-        setIsLoadingBoutique(true);
         // Récupérer toutes les boutiques pour obtenir l'ID
         const boutiques = await franchiseService.getAllBoutiques();
         if (boutiques.length > 0) {
@@ -144,8 +142,6 @@ export default function OrderDetails() {
         }
       } catch (err) {
         // Ignorer l'erreur silencieusement, on n'affichera pas l'estimation
-      } finally {
-        setIsLoadingBoutique(false);
       }
     };
 
@@ -277,8 +273,6 @@ export default function OrderDetails() {
                   latitude: deliveryLat,
                   longitude: deliveryLng,
                 }}
-                originName={boutique.name}
-                destinationName={orderData.adresse_livraison.location_name || orderData.adresse_livraison.adresse || "Adresse de livraison"}
                 mode="driving"
                 orderStatus={orderData.status_text}
                 deliveredAt={deliveredAt}

@@ -15,8 +15,6 @@ import { calculateDistanceAndTime, Coordinates } from "../../services/api/distan
 interface DeliveryTrackingProps {
   origin: Coordinates; // Coordonnées de la boutique
   destination: Coordinates; // Coordonnées de l'adresse de livraison
-  originName?: string; // Nom de la boutique (optionnel)
-  destinationName?: string; // Nom de l'adresse de livraison (optionnel)
   mode?: "driving" | "walking" | "bicycling" | "transit"; // Mode de transport
   orderStatus?: string; // Statut de la commande (pour savoir si elle est livrée)
   deliveredAt?: string | null; // Date réelle de livraison (si disponible)
@@ -27,8 +25,6 @@ interface DeliveryTrackingProps {
 export default function DeliveryTracking({
   origin,
   destination,
-  originName = "Boutique",
-  destinationName = "Adresse de livraison",
   mode = "driving",
   orderStatus,
   deliveredAt,

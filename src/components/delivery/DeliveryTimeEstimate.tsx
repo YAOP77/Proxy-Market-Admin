@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from "react";
 import { useGoogleMaps } from "../../contexts/GoogleMapsContext";
-import { calculateDistanceAndTime, formatDuration, Coordinates } from "../../services/api/distanceService";
+import { calculateDistanceAndTime, Coordinates } from "../../services/api/distanceService";
 
 interface DeliveryTimeEstimateProps {
   origin: Coordinates; // Coordonnées de la boutique
@@ -31,7 +31,6 @@ export default function DeliveryTimeEstimate({
   const [error, setError] = useState<string | null>(null);
   const [distance, setDistance] = useState<string | null>(null);
   const [duration, setDuration] = useState<string | null>(null);
-  const [durationInSeconds, setDurationInSeconds] = useState<number | null>(null);
 
   useEffect(() => {
     const calculateEstimate = async () => {
@@ -57,13 +56,11 @@ export default function DeliveryTimeEstimate({
 
         setDistance(result.distance.text);
         setDuration(result.duration.text);
-        setDurationInSeconds(result.duration.value);
       } catch (err) {
         const message = err instanceof Error ? err.message : "Erreur lors du calcul";
         setError(message);
         setDistance(null);
         setDuration(null);
-        setDurationInSeconds(null);
       } finally {
         setIsCalculating(false);
       }

@@ -67,8 +67,13 @@ export async function calculateDistanceAndTime(
         unitSystem: window.google.maps.UnitSystem.METRIC, // Utiliser le système métrique (km, m)
       },
       (response, status) => {
-        if (status === window.google.maps.DistanceMatrixStatus.OK) {
-          const result = response.rows[0].elements[0];
+        if (status === window.google.maps.DistanceMatrixStatus.OK && response) {
+          const result = response.rows[0]?.elements[0];
+          
+          if (!result) {
+            reject(new Error("Aucune donnée de distance disponible"));
+            return;
+          }
 
           if (result.status === window.google.maps.DistanceMatrixElementStatus.OK) {
             resolve({
