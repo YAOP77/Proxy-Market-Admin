@@ -20,7 +20,6 @@ interface NotificationItem {
 export default function NotificationDropdown() {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const [notifying, setNotifying] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const lastFetchedOrdersRef = useRef<Set<string>>(new Set());
@@ -37,7 +36,6 @@ export default function NotificationDropdown() {
 
   const handleClick = () => {
     toggleDropdown();
-    setNotifying(false);
     // Marquer toutes les notifications comme lues
     setNotifications((prev) => prev.map((notif) => ({ ...notif, isNew: false })));
   };
@@ -192,7 +190,6 @@ export default function NotificationDropdown() {
             const uniqueNew = newNotifications.filter((n) => !existingIds.has(n.id));
             return [...uniqueNew, ...prev].slice(0, 10); // Garder seulement les 10 plus récentes
           });
-          setNotifying(true);
         }
       } catch (error) {
         // Ignorer silencieusement les erreurs
